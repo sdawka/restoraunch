@@ -21,8 +21,8 @@
 @layer base {
   html {
     font-family: system-ui, sans-serif;
-    background: oklch(0.98 0.01 60);
-    color: oklch(0.20 0.02 60);
+    background: var(--color-warm-50);
+    color: var(--color-warm-900);
   }
 
   body {
