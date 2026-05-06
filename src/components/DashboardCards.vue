@@ -10,16 +10,17 @@ interface InventoryItem {
   isLowStock: boolean;
 }
 
-interface MenuItem {
-  id: number;
-  name: string;
-  price: number;
-  ingredientCost: number;
-  margin: number;
-}
-
 interface VarianceResult {
   unresolvedCount: number;
+}
+
+interface TodaySalesResponse {
+  totalRevenue: number;
+  totalCost: number;
+  totalProfit: number;
+  marginPercent: number;
+  recentActivity: { name: string; quantity: number; revenue: number; time: string }[];
+  date: string;
 }
 
 interface DashboardData {
@@ -29,7 +30,7 @@ interface DashboardData {
   marginPercent: number;
   lowStockItems: InventoryItem[];
   unresolvedAnomalies: number;
-  recentActivity: { name: string; quantity: number; time: string }[];
+  recentActivity: { name: string; quantity: number; revenue: number; time: string }[];
 }
 
 const loading = ref(true);
@@ -68,46 +69,28 @@ async function fetchDashboardData() {
   error.value = null;
 
   try {
-    const [inventoryRes, menuRes, varianceRes] = await Promise.all([
+    const [inventoryRes, varianceRes, salesRes] = await Promise.all([
       fetch('/api/inventory'),
-      fetch('/api/menu'),
       fetch('/api/variance/calculate'),
+      fetch('/api/sales/today'),
     ]);
 
     const inventory: InventoryItem[] = inventoryRes.ok ? await inventoryRes.json() : [];
-    const menuItems: MenuItem[] = menuRes.ok ? await menuRes.json() : [];
     const variance: VarianceResult = varianceRes.ok ? await varianceRes.json() : { unresolvedCount: 0 };
+    const todaySalesData: TodaySalesResponse = salesRes.ok
+      ? await salesRes.json()
+      : { totalRevenue: 0, totalCost: 0, totalProfit: 0, marginPercent: 0, recentActivity: [], date: '' };
 
-    // Calculate today's metrics from menu items (simulated for now since we don't have today's sales endpoint)
-    // In production, this would come from a dedicated dashboard API
-    const totalPotentialRevenue = menuItems.reduce((sum, item) => sum + item.price, 0);
-    const totalPotentialCost = menuItems.reduce((sum, item) => sum + item.ingredientCost, 0);
-
-    // Use sample multiplier for demo (in production, use actual sales data)
-    const salesMultiplier = menuItems.length > 0 ? 3 : 0;
-    const todaySales = totalPotentialRevenue * salesMultiplier;
-    const todayCost = totalPotentialCost * salesMultiplier;
-    const grossProfit = todaySales - todayCost;
-    const marginPercent = todaySales > 0 ? (grossProfit / todaySales) * 100 : 0;
-
-    // Filter low stock items
     const lowStockItems = inventory.filter((item) => item.isLowStock);
 
-    // Generate sample recent activity for demo
-    const recentActivity = menuItems.slice(0, 4).map((item, i) => ({
-      name: item.name,
-      quantity: Math.floor(Math.random() * 5) + 1,
-      time: `${Math.floor(Math.random() * 30) + 1}m ago`,
-    }));
-
     data.value = {
-      todaySales,
-      todayCost,
-      grossProfit,
-      marginPercent,
+      todaySales: todaySalesData.totalRevenue,
+      todayCost: todaySalesData.totalCost,
+      grossProfit: todaySalesData.totalProfit,
+      marginPercent: todaySalesData.marginPercent,
       lowStockItems,
       unresolvedAnomalies: variance.unresolvedCount || 0,
-      recentActivity,
+      recentActivity: todaySalesData.recentActivity,
     };
   } catch (err) {
     error.value = 'Failed to load dashboard data';
