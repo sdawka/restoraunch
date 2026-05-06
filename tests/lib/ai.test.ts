@@ -99,6 +99,63 @@ describe("AI Service", () => {
     });
   });
 
+  describe("parseReceipt edge cases", () => {
+    it("handles malformed JSON in parseReceipt", async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{ message: { content: "not valid json {" } }],
+        }),
+      });
+
+      const service = createAIService({ apiKey: "test", fetchFn: mockFetch });
+      await expect(service.parseReceipt("http://example.com/receipt.jpg"))
+        .rejects.toThrow(/JSON/i);
+    });
+
+    it("throws on rate limit error", async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 429,
+        statusText: "Too Many Requests",
+      });
+
+      const service = createAIService({ apiKey: "test", fetchFn: mockFetch });
+      await expect(service.parseReceipt("http://example.com/receipt.jpg"))
+        .rejects.toThrow(/429|rate/i);
+    });
+
+    it("handles null fields in parsed receipt", async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{
+            message: {
+              content: JSON.stringify({
+                vendor: null,
+                items: [],
+                total: 0,
+                date: null,
+              }),
+            },
+          }],
+        }),
+      });
+
+      const service = createAIService({ apiKey: "test", fetchFn: mockFetch });
+      const result = await service.parseReceipt("http://example.com/receipt.jpg");
+      expect(result.items).toEqual([]);
+    });
+
+    it("handles network errors", async () => {
+      const mockFetch = vi.fn().mockRejectedValue(new Error("Network error"));
+
+      const service = createAIService({ apiKey: "test", fetchFn: mockFetch });
+      await expect(service.parseReceipt("http://example.com/receipt.jpg"))
+        .rejects.toThrow("Network error");
+    });
+  });
+
   describe("matchInventoryItem", () => {
     it("matches receipt item to inventory items", async () => {
       const mockMatchResponse = {
@@ -164,6 +221,55 @@ describe("AI Service", () => {
 
       expect(result.matchedId).toBeNull();
       expect(result.confidence).toBeLessThan(0.5);
+    });
+
+    it("returns low confidence for dissimilar items", async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{
+            message: {
+              content: JSON.stringify({
+                matchedId: null,
+                confidence: 0.1,
+                reasoning: "No similar items found",
+              }),
+            },
+          }],
+        }),
+      });
+
+      const service = createAIService({ apiKey: "test", fetchFn: mockFetch });
+      const result = await service.matchInventoryItem(
+        { name: "XYZ Unknown Product", unit: "each" },
+        [{ id: 1, name: "Chicken", unit: "lb" }]
+      );
+      expect(result.matchedId).toBeNull();
+      expect(result.confidence).toBeLessThan(0.5);
+    });
+
+    it("handles empty inventory list", async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{
+            message: {
+              content: JSON.stringify({
+                matchedId: null,
+                confidence: 0,
+                reasoning: "No inventory items to match against",
+              }),
+            },
+          }],
+        }),
+      });
+
+      const service = createAIService({ apiKey: "test", fetchFn: mockFetch });
+      const result = await service.matchInventoryItem(
+        { name: "Eggs", unit: "dozen" },
+        []
+      );
+      expect(result.matchedId).toBeNull();
     });
   });
 });
