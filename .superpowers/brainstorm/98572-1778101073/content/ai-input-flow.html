@@ -1,0 +1,94 @@
+<h2>AI-Powered Input Flow</h2>
+<p class="subtitle">Receipt scanning and POS import</p>
+
+<div style="display: grid; gap: 2rem;">
+
+  <!-- Receipt Flow -->
+  <div class="mockup">
+    <div class="mockup-header">Receipt Scanning → Inventory</div>
+    <div class="mockup-body" style="padding: 1.5rem;">
+      <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+
+        <div style="text-align: center; padding: 1rem; background: oklch(0.95 0.03 60); border-radius: 8px; min-width: 120px;">
+          <div style="font-size: 1.5rem;">📸</div>
+          <div style="font-size: 0.85rem; margin-top: 0.5rem;">Take photo<br/>of receipt</div>
+        </div>
+
+        <div style="font-size: 1.5rem; color: oklch(0.6 0.02 60);">→</div>
+
+        <div style="text-align: center; padding: 1rem; background: oklch(0.95 0.03 200); border-radius: 8px; min-width: 120px;">
+          <div style="font-size: 1.5rem;">🤖</div>
+          <div style="font-size: 0.85rem; margin-top: 0.5rem;">AI extracts<br/>items + costs</div>
+        </div>
+
+        <div style="font-size: 1.5rem; color: oklch(0.6 0.02 60);">→</div>
+
+        <div style="text-align: center; padding: 1rem; background: oklch(0.95 0.03 140); border-radius: 8px; min-width: 120px;">
+          <div style="font-size: 1.5rem;">✏️</div>
+          <div style="font-size: 0.85rem; margin-top: 0.5rem;">Review &<br/>confirm</div>
+        </div>
+
+        <div style="font-size: 1.5rem; color: oklch(0.6 0.02 60);">→</div>
+
+        <div style="text-align: center; padding: 1rem; background: oklch(0.95 0.03 160); border-radius: 8px; min-width: 120px;">
+          <div style="font-size: 1.5rem;">📦</div>
+          <div style="font-size: 0.85rem; margin-top: 0.5rem;">Inventory<br/>updated</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- What AI Extracts -->
+  <div class="mockup">
+    <div class="mockup-header">AI Extracts From Receipt</div>
+    <div class="mockup-body" style="padding: 1.5rem;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div style="padding: 0.75rem; background: oklch(0.97 0.01 60); border-radius: 6px;">
+          <strong>Line items</strong><br/>
+          <span style="color: oklch(0.5 0.02 60); font-size: 0.9rem;">Eggs (30ct), Flour (25lb), etc.</span>
+        </div>
+        <div style="padding: 0.75rem; background: oklch(0.97 0.01 60); border-radius: 6px;">
+          <strong>Quantities</strong><br/>
+          <span style="color: oklch(0.5 0.02 60); font-size: 0.9rem;">Parsed units and amounts</span>
+        </div>
+        <div style="padding: 0.75rem; background: oklch(0.97 0.01 60); border-radius: 6px;">
+          <strong>Costs</strong><br/>
+          <span style="color: oklch(0.5 0.02 60); font-size: 0.9rem;">Per-item and total</span>
+        </div>
+        <div style="padding: 0.75rem; background: oklch(0.97 0.01 60); border-radius: 6px;">
+          <strong>Supplier</strong><br/>
+          <span style="color: oklch(0.5 0.02 60); font-size: 0.9rem;">Inferred from header/logo</span>
+        </div>
+      </div>
+      <div style="margin-top: 1rem; padding: 0.75rem; background: oklch(0.92 0.04 60); border-radius: 6px; font-size: 0.85rem;">
+        <strong>Smart matching:</strong> AI matches receipt items to existing inventory items (e.g., "EGGS LRG 30CT" → "Eggs (large)")
+      </div>
+    </div>
+  </div>
+
+  <!-- POS Flow -->
+  <div class="mockup">
+    <div class="mockup-header">POS → Sales Data</div>
+    <div class="mockup-body" style="padding: 1.5rem;">
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px; padding: 1rem; background: oklch(0.97 0.01 60); border-radius: 8px; text-align: center;">
+          <div style="font-size: 1.25rem; margin-bottom: 0.5rem;">📱</div>
+          <strong>Photo of POS screen</strong>
+          <p style="font-size: 0.85rem; color: oklch(0.5 0.02 60); margin: 0.5rem 0 0 0;">Snap end-of-day report, AI extracts sales</p>
+        </div>
+        <div style="flex: 1; min-width: 200px; padding: 1rem; background: oklch(0.97 0.01 60); border-radius: 8px; text-align: center;">
+          <div style="font-size: 1.25rem; margin-bottom: 0.5rem;">🔗</div>
+          <strong>TouchBistro API</strong>
+          <p style="font-size: 0.85rem; color: oklch(0.5 0.02 60); margin: 0.5rem 0 0 0;">Direct integration (when available)</p>
+        </div>
+        <div style="flex: 1; min-width: 200px; padding: 1rem; background: oklch(0.97 0.01 60); border-radius: 8px; text-align: center;">
+          <div style="font-size: 1.25rem; margin-bottom: 0.5rem;">📄</div>
+          <strong>CSV upload</strong>
+          <p style="font-size: 0.85rem; color: oklch(0.5 0.02 60); margin: 0.5rem 0 0 0;">Export from any POS, import here</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

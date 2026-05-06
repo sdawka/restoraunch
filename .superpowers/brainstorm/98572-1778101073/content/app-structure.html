@@ -1,0 +1,52 @@
+<h2>App Structure</h2>
+<p class="subtitle">Main screens and navigation flow</p>
+
+<div class="mockup" style="margin-bottom: 2rem;">
+  <div class="mockup-header">Navigation</div>
+  <div class="mockup-body" style="display: flex; gap: 1rem; justify-content: center; padding: 1.5rem; flex-wrap: wrap;">
+    <div style="padding: 0.75rem 1.25rem; background: oklch(0.85 0.05 60); border-radius: 8px; font-weight: 500;">Dashboard</div>
+    <div style="padding: 0.75rem 1.25rem; background: oklch(0.92 0.02 60); border-radius: 8px;">Inventory</div>
+    <div style="padding: 0.75rem 1.25rem; background: oklch(0.92 0.02 60); border-radius: 8px;">Menu</div>
+    <div style="padding: 0.75rem 1.25rem; background: oklch(0.92 0.02 60); border-radius: 8px;">Sales</div>
+    <div style="padding: 0.75rem 1.25rem; background: oklch(0.92 0.02 60); border-radius: 8px;">Insights</div>
+    <div style="padding: 0.75rem 1.25rem; background: oklch(0.92 0.02 60); border-radius: 8px;">Model</div>
+  </div>
+</div>
+
+<div class="cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+
+  <div class="card" style="background: oklch(0.98 0.01 60); border: 1px solid oklch(0.9 0.02 60); border-radius: 12px; padding: 1.25rem;">
+    <h3 style="margin: 0 0 0.5rem 0; color: oklch(0.35 0.05 60);">📊 Dashboard</h3>
+    <p style="margin: 0; color: oklch(0.5 0.02 60); font-size: 0.9rem;">Today's snapshot: sales, costs, margin, anomalies flagged, low stock alerts</p>
+  </div>
+
+  <div class="card" style="background: oklch(0.98 0.01 60); border: 1px solid oklch(0.9 0.02 60); border-radius: 12px; padding: 1.25rem;">
+    <h3 style="margin: 0 0 0.5rem 0; color: oklch(0.35 0.05 60);">📦 Inventory</h3>
+    <p style="margin: 0; color: oklch(0.5 0.02 60); font-size: 0.9rem;">Current stock levels, add via receipt photo, manual adjustments, supplier links</p>
+  </div>
+
+  <div class="card" style="background: oklch(0.98 0.01 60); border: 1px solid oklch(0.9 0.02 60); border-radius: 12px; padding: 1.25rem;">
+    <h3 style="margin: 0 0 0.5rem 0; color: oklch(0.35 0.05 60);">🍽️ Menu</h3>
+    <p style="margin: 0; color: oklch(0.5 0.02 60); font-size: 0.9rem;">Menu items with recipes, cost per item, margin %, edit ingredient quantities</p>
+  </div>
+
+  <div class="card" style="background: oklch(0.98 0.01 60); border: 1px solid oklch(0.9 0.02 60); border-radius: 12px; padding: 1.25rem;">
+    <h3 style="margin: 0 0 0.5rem 0; color: oklch(0.35 0.05 60);">💵 Sales</h3>
+    <p style="margin: 0; color: oklch(0.5 0.02 60); font-size: 0.9rem;">Import from POS (photo or API), daily/weekly view, profit per item breakdown</p>
+  </div>
+
+  <div class="card" style="background: oklch(0.98 0.01 60); border: 1px solid oklch(0.9 0.02 60); border-radius: 12px; padding: 1.25rem;">
+    <h3 style="margin: 0 0 0.5rem 0; color: oklch(0.35 0.05 60);">🔍 Insights</h3>
+    <p style="margin: 0; color: oklch(0.5 0.02 60); font-size: 0.9rem;">Variance analysis, anomaly flags needing explanation, trends over time, market suggestions (stub)</p>
+  </div>
+
+  <div class="card" style="background: oklch(0.98 0.01 60); border: 1px solid oklch(0.9 0.02 60); border-radius: 12px; padding: 1.25rem;">
+    <h3 style="margin: 0 0 0.5rem 0; color: oklch(0.35 0.05 60);">🧪 Model</h3>
+    <p style="margin: 0; color: oklch(0.5 0.02 60); font-size: 0.9rem;">What-if scenarios: new menu item, supplier change, price adjustment — see projected impact</p>
+  </div>
+
+</div>
+
+<div style="margin-top: 2rem; padding: 1rem; background: oklch(0.95 0.02 200); border-radius: 8px;">
+  <p style="margin: 0; font-size: 0.9rem;"><strong>Mobile:</strong> Bottom tab navigation (5 tabs max, combine Dashboard + Insights). Quick-action FAB for "Scan Receipt".</p>
+</div>

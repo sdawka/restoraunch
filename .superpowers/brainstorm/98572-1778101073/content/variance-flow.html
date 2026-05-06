@@ -1,0 +1,80 @@
+<h2>Variance Detection & Anomalies</h2>
+<p class="subtitle">How the system spots problems and learns over time</p>
+
+<div style="display: grid; gap: 2rem;">
+
+  <!-- The Math -->
+  <div class="mockup">
+    <div class="mockup-header">The Calculation</div>
+    <div class="mockup-body" style="padding: 1.5rem;">
+      <div style="background: oklch(0.15 0.01 60); color: oklch(0.95 0.01 60); padding: 1.25rem; border-radius: 8px; font-family: monospace; font-size: 0.95rem; line-height: 1.6;">
+        <div><span style="color: oklch(0.7 0.1 140);">Expected usage</span> = Σ (sales × recipe quantities)</div>
+        <div style="margin-top: 0.5rem;"><span style="color: oklch(0.7 0.1 200);">Actual usage</span> = Starting inventory − Ending inventory + Purchases</div>
+        <div style="margin-top: 0.5rem;"><span style="color: oklch(0.7 0.15 30);">Variance</span> = Actual − Expected</div>
+      </div>
+      <p style="margin-top: 1rem; font-size: 0.9rem; color: oklch(0.35 0.02 60);">
+        Run daily or weekly. Positive variance = used more than expected. Negative = used less (rare, possibly data entry error).
+      </p>
+    </div>
+  </div>
+
+  <!-- Anomaly States -->
+  <div class="mockup">
+    <div class="mockup-header">Anomaly Lifecycle</div>
+    <div class="mockup-body" style="padding: 1.5rem;">
+      <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+
+        <div style="text-align: center; padding: 1rem; background: oklch(0.95 0.08 30); border-radius: 8px; min-width: 130px;">
+          <div style="font-size: 1.25rem;">🚨</div>
+          <div style="font-weight: 600; margin-top: 0.5rem; color: oklch(0.35 0.1 30);">Flagged</div>
+          <div style="font-size: 0.8rem; color: oklch(0.4 0.05 30); margin-top: 0.25rem;">Variance exceeds threshold</div>
+        </div>
+
+        <div style="font-size: 1.5rem; color: oklch(0.5 0.02 60);">→</div>
+
+        <div style="text-align: center; padding: 1rem; background: oklch(0.95 0.08 60); border-radius: 8px; min-width: 130px;">
+          <div style="font-size: 1.25rem;">💬</div>
+          <div style="font-weight: 600; margin-top: 0.5rem; color: oklch(0.35 0.1 60);">Explained</div>
+          <div style="font-size: 0.8rem; color: oklch(0.4 0.05 60); margin-top: 0.25rem;">User adds reason</div>
+        </div>
+
+        <div style="font-size: 1.5rem; color: oklch(0.5 0.02 60);">→</div>
+
+        <div style="text-align: center; padding: 1rem; background: oklch(0.95 0.08 140); border-radius: 8px; min-width: 130px;">
+          <div style="font-size: 1.25rem;">✅</div>
+          <div style="font-weight: 600; margin-top: 0.5rem; color: oklch(0.35 0.1 140);">Resolved</div>
+          <div style="font-size: 0.8rem; color: oklch(0.4 0.05 140); margin-top: 0.25rem;">Logged for learning</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Common Explanations -->
+  <div class="mockup">
+    <div class="mockup-header">Common Variance Explanations (Quick-Select)</div>
+    <div class="mockup-body" style="padding: 1.5rem;">
+      <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+        <span style="padding: 0.5rem 1rem; background: oklch(0.92 0.03 60); border-radius: 20px; font-size: 0.9rem; color: oklch(0.3 0.02 60);">🗑️ Waste / Spoilage</span>
+        <span style="padding: 0.5rem 1rem; background: oklch(0.92 0.03 60); border-radius: 20px; font-size: 0.9rem; color: oklch(0.3 0.02 60);">🍳 Staff meals</span>
+        <span style="padding: 0.5rem 1rem; background: oklch(0.92 0.03 60); border-radius: 20px; font-size: 0.9rem; color: oklch(0.3 0.02 60);">📏 Overportioning</span>
+        <span style="padding: 0.5rem 1rem; background: oklch(0.92 0.03 60); border-radius: 20px; font-size: 0.9rem; color: oklch(0.3 0.02 60);">🎁 Comped / promo</span>
+        <span style="padding: 0.5rem 1rem; background: oklch(0.92 0.03 60); border-radius: 20px; font-size: 0.9rem; color: oklch(0.3 0.02 60);">📝 Recipe inaccurate</span>
+        <span style="padding: 0.5rem 1rem; background: oklch(0.92 0.03 60); border-radius: 20px; font-size: 0.9rem; color: oklch(0.3 0.02 60);">❓ Theft suspected</span>
+        <span style="padding: 0.5rem 1rem; background: oklch(0.92 0.03 60); border-radius: 20px; font-size: 0.9rem; color: oklch(0.3 0.02 60);">📦 Inventory miscount</span>
+        <span style="padding: 0.5rem 1rem; background: oklch(0.92 0.03 60); border-radius: 20px; font-size: 0.9rem; color: oklch(0.3 0.02 60);">✏️ Other (add note)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Learning -->
+  <div style="padding: 1.25rem; background: oklch(0.95 0.04 200); border-radius: 8px;">
+    <h3 style="margin: 0 0 0.75rem 0; color: oklch(0.25 0.05 200);">📈 Learning Over Time</h3>
+    <ul style="margin: 0; padding-left: 1.25rem; color: oklch(0.3 0.03 200); line-height: 1.7;">
+      <li>If "Recipe inaccurate" is selected repeatedly for an item, prompt to update the recipe</li>
+      <li>Track variance patterns by day-of-week, ingredient, menu item</li>
+      <li>Surface insights: "Burger patty waste is 15% higher on weekends"</li>
+    </ul>
+  </div>
+
+</div>

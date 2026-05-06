@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import type { D1Database, R2Bucket } from '@cloudflare/workers-types';
+import { mockEnv } from '../setup';
 
 export function createMockDb() {
   const mockRun = vi.fn();
@@ -78,3 +79,11 @@ export function createContext(
 export async function parseJson(response: Response) {
   return response.json();
 }
+
+export function setMockEnv(options: { db?: D1Database; bucket?: R2Bucket; apiKey?: string }) {
+  if (options.db) mockEnv.DB = options.db;
+  if (options.bucket) mockEnv.IMAGES = options.bucket;
+  if (options.apiKey) mockEnv.OPENROUTER_API_KEY = options.apiKey;
+}
+
+export { mockEnv };

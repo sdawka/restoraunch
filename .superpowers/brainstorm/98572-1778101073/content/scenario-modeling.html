@@ -1,0 +1,101 @@
+<h2>Scenario Modeling</h2>
+<p class="subtitle">What-if analysis for menu and supplier decisions</p>
+
+<div style="display: grid; gap: 2rem;">
+
+  <!-- Scenario Types -->
+  <div class="mockup">
+    <div class="mockup-header">Scenario Types</div>
+    <div class="mockup-body" style="padding: 1.5rem;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+
+        <div style="padding: 1rem; background: oklch(0.97 0.02 60); border-radius: 8px; border-left: 4px solid oklch(0.6 0.15 60);">
+          <div style="font-weight: 600; color: oklch(0.25 0.02 60); margin-bottom: 0.5rem;">🍽️ New Menu Item</div>
+          <div style="font-size: 0.85rem; color: oklch(0.4 0.02 60);">Define recipe, set price, estimate daily sales → see projected margin</div>
+        </div>
+
+        <div style="padding: 1rem; background: oklch(0.97 0.02 60); border-radius: 8px; border-left: 4px solid oklch(0.6 0.15 140);">
+          <div style="font-weight: 600; color: oklch(0.25 0.02 60); margin-bottom: 0.5rem;">💰 Price Change</div>
+          <div style="font-size: 0.85rem; color: oklch(0.4 0.02 60);">Adjust menu item price → see impact on margin (assumes same volume)</div>
+        </div>
+
+        <div style="padding: 1rem; background: oklch(0.97 0.02 60); border-radius: 8px; border-left: 4px solid oklch(0.6 0.15 200);">
+          <div style="font-weight: 600; color: oklch(0.25 0.02 60); margin-bottom: 0.5rem;">🚚 Supplier Switch</div>
+          <div style="font-size: 0.85rem; color: oklch(0.4 0.02 60);">Compare ingredient costs from different suppliers → see menu-wide impact</div>
+        </div>
+
+        <div style="padding: 1rem; background: oklch(0.97 0.02 60); border-radius: 8px; border-left: 4px solid oklch(0.6 0.15 320);">
+          <div style="font-weight: 600; color: oklch(0.25 0.02 60); margin-bottom: 0.5rem;">📉 Volume Change</div>
+          <div style="font-size: 0.85rem; color: oklch(0.4 0.02 60);">"What if burger sales drop 20%?" → see revenue and inventory impact</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Example: New Menu Item -->
+  <div class="mockup">
+    <div class="mockup-header">Example: Adding a New Menu Item</div>
+    <div class="mockup-body" style="padding: 1.5rem;">
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+
+        <!-- Inputs -->
+        <div>
+          <div style="font-weight: 600; color: oklch(0.3 0.02 60); margin-bottom: 1rem;">Inputs</div>
+
+          <div style="margin-bottom: 0.75rem;">
+            <label style="font-size: 0.8rem; color: oklch(0.5 0.02 60);">Item name</label>
+            <div style="padding: 0.5rem; background: oklch(0.97 0.01 60); border: 1px solid oklch(0.85 0.02 60); border-radius: 4px; margin-top: 0.25rem;">Avocado Toast</div>
+          </div>
+
+          <div style="margin-bottom: 0.75rem;">
+            <label style="font-size: 0.8rem; color: oklch(0.5 0.02 60);">Recipe (ingredients)</label>
+            <div style="padding: 0.5rem; background: oklch(0.97 0.01 60); border: 1px solid oklch(0.85 0.02 60); border-radius: 4px; margin-top: 0.25rem; font-size: 0.9rem;">
+              Bread (2 slices) · Avocado (0.5) · Eggs (2) · Salt, pepper
+            </div>
+          </div>
+
+          <div style="margin-bottom: 0.75rem;">
+            <label style="font-size: 0.8rem; color: oklch(0.5 0.02 60);">Sale price</label>
+            <div style="padding: 0.5rem; background: oklch(0.97 0.01 60); border: 1px solid oklch(0.85 0.02 60); border-radius: 4px; margin-top: 0.25rem;">$14.00</div>
+          </div>
+
+          <div style="margin-bottom: 0.75rem;">
+            <label style="font-size: 0.8rem; color: oklch(0.5 0.02 60);">Estimated sales/day</label>
+            <div style="padding: 0.5rem; background: oklch(0.97 0.01 60); border: 1px solid oklch(0.85 0.02 60); border-radius: 4px; margin-top: 0.25rem;">15</div>
+          </div>
+        </div>
+
+        <!-- Outputs -->
+        <div>
+          <div style="font-weight: 600; color: oklch(0.3 0.02 60); margin-bottom: 1rem;">Projected Impact</div>
+
+          <div style="padding: 1rem; background: oklch(0.95 0.05 140); border-radius: 8px; margin-bottom: 0.75rem;">
+            <div style="font-size: 0.8rem; color: oklch(0.4 0.05 140);">Ingredient cost per item</div>
+            <div style="font-size: 1.5rem; font-weight: 600; color: oklch(0.3 0.08 140);">$4.20</div>
+          </div>
+
+          <div style="padding: 1rem; background: oklch(0.95 0.05 140); border-radius: 8px; margin-bottom: 0.75rem;">
+            <div style="font-size: 0.8rem; color: oklch(0.4 0.05 140);">Margin per item</div>
+            <div style="font-size: 1.5rem; font-weight: 600; color: oklch(0.3 0.08 140);">$9.80 <span style="font-size: 0.9rem; font-weight: 400;">(70%)</span></div>
+          </div>
+
+          <div style="padding: 1rem; background: oklch(0.95 0.05 60); border-radius: 8px;">
+            <div style="font-size: 0.8rem; color: oklch(0.4 0.05 60);">Daily profit contribution</div>
+            <div style="font-size: 1.5rem; font-weight: 600; color: oklch(0.3 0.08 60);">+$147/day</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Stub note -->
+  <div style="padding: 1rem; background: oklch(0.92 0.04 280); border-radius: 8px;">
+    <div style="font-size: 0.9rem; color: oklch(0.3 0.05 280);">
+      <strong>Future (stubbed):</strong> AI suggestions like "Based on local trends, a breakfast burrito at $12 could sell ~20/day with 65% margin"
+    </div>
+  </div>
+
+</div>
