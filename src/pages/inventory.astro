@@ -1,0 +1,64 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+---
+
+<AppLayout title="Inventory">
+  <main class="min-h-screen bg-gradient-to-br from-warm-50 via-warm-100/50 to-warm-50">
+    <!-- Subtle grid pattern overlay -->
+    <div class="fixed inset-0 pointer-events-none opacity-[0.02]"
+         style="background-image: linear-gradient(var(--color-warm-400) 1px, transparent 1px), linear-gradient(90deg, var(--color-warm-400) 1px, transparent 1px); background-size: 40px 40px;">
+    </div>
+
+    <div class="relative z-10 p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+      <!-- Header -->
+      <header class="mb-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-1.5 h-8 bg-gradient-to-b from-warm-500 to-warm-600 rounded-full"></div>
+          <h1 class="text-3xl md:text-4xl font-semibold tracking-tight text-warm-800"
+              style="font-family: 'DM Serif Display', Georgia, serif;">
+            Inventory
+          </h1>
+        </div>
+        <p class="text-warm-500 ml-6 text-sm uppercase tracking-widest">Stock Management</p>
+      </header>
+
+      <!-- Main content grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Inventory List - Takes 2 columns on large screens -->
+        <div class="lg:col-span-2">
+          <div id="inventory-list"></div>
+        </div>
+
+        <!-- Receipt Scanner - Takes 1 column -->
+        <div class="lg:col-span-1">
+          <div id="receipt-scanner"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Load Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Mount Vue components -->
+  <script>
+    import { createApp } from 'vue';
+    import InventoryList from '../components/InventoryList.vue';
+    import ReceiptScanner from '../components/ReceiptScanner.vue';
+
+    // Mount InventoryList
+    const inventoryApp = createApp(InventoryList);
+    inventoryApp.mount('#inventory-list');
+
+    // Mount ReceiptScanner with callback to refresh inventory
+    const scannerApp = createApp(ReceiptScanner, {
+      onInventoryUpdated: () => {
+        // Dispatch custom event to trigger inventory refresh
+        window.dispatchEvent(new CustomEvent('inventory-updated'));
+      }
+    });
+    scannerApp.mount('#receipt-scanner');
+  </script>
+</AppLayout>
