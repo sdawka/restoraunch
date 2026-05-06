@@ -1,10 +1,11 @@
 import type { APIRoute } from 'astro';
+import { env } from 'cloudflare:workers';
 import { createInventoryService } from '../../../lib/inventory/service';
 
 export const prerender = false;
 
-export const GET: APIRoute = async ({ locals }) => {
-  const db = locals.runtime.env.DB;
+export const GET: APIRoute = async () => {
+  const db = env.DB;
   const service = createInventoryService(db);
   const items = await service.getAll();
 

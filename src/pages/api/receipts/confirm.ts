@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { env } from 'cloudflare:workers';
 import { createInventoryService } from '../../../lib/inventory/service';
 
 export const prerender = false;
@@ -18,8 +19,8 @@ interface ConfirmBody {
   purchaseDate: string;
 }
 
-export const POST: APIRoute = async ({ request, locals }) => {
-  const db = locals.runtime.env.DB;
+export const POST: APIRoute = async ({ request }) => {
+  const db = env.DB;
 
   let body: ConfirmBody;
   try {

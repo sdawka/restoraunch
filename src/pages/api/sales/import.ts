@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { env } from 'cloudflare:workers';
 import { createAIService } from '../../../lib/ai/service';
 import { createSalesService } from '../../../lib/sales/service';
 import { getMenuItems } from '../../../lib/db/queries';
@@ -8,8 +9,7 @@ export const prerender = false;
 // Default location_id when none is provided in the import source
 const DEFAULT_LOCATION_ID = 1;
 
-export const POST: APIRoute = async ({ request, locals }) => {
-  const env = locals.runtime.env;
+export const POST: APIRoute = async ({ request }) => {
   const contentType = request.headers.get('content-type') || '';
 
   if (!contentType.includes('multipart/form-data')) {

@@ -1,10 +1,11 @@
 import type { APIRoute } from 'astro';
+import { env } from 'cloudflare:workers';
 import { createInventoryService } from '../../../lib/inventory/service';
 
 export const prerender = false;
 
-export const PUT: APIRoute = async ({ params, request, locals }) => {
-  const db = locals.runtime.env.DB;
+export const PUT: APIRoute = async ({ params, request }) => {
+  const db = env.DB;
   const service = createInventoryService(db);
   const id = parseInt(params.id!, 10);
   const body = await request.json() as { delta: number; reason?: string };

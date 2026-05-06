@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { env } from 'cloudflare:workers';
 import { createScenarioService } from '../../../lib/scenarios/service';
 import { createMenuService } from '../../../lib/menu/service';
 import { createInventoryService } from '../../../lib/inventory/service';
@@ -7,8 +8,8 @@ type ScenarioType = 'new_menu_item' | 'price_change' | 'supplier_switch' | 'volu
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request, locals }) => {
-  const db = locals.runtime.env.DB;
+export const POST: APIRoute = async ({ request }) => {
+  const db = env.DB;
   const body = await request.json() as { type: ScenarioType; params: Record<string, unknown> };
   const scenarioService = createScenarioService();
   const menuService = createMenuService(db);

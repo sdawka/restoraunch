@@ -1,11 +1,11 @@
 import type { APIRoute } from 'astro';
+import { env } from 'cloudflare:workers';
 import { createAIService } from '../../../lib/ai/service';
 import { getInventoryItems } from '../../../lib/db/queries';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request, locals }) => {
-  const env = locals.runtime.env;
+export const POST: APIRoute = async ({ request }) => {
 
   let formData: FormData;
   try {

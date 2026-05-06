@@ -1,10 +1,11 @@
 import type { APIRoute } from 'astro';
+import { env } from 'cloudflare:workers';
 import { createVarianceService, type ExplanationType } from '../../../../lib/variance/service';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ params, request, locals }) => {
-  const db = locals.runtime.env.DB;
+export const POST: APIRoute = async ({ params, request }) => {
+  const db = env.DB;
   const id = parseInt(params.id!, 10);
 
   if (isNaN(id)) {

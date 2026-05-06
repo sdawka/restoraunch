@@ -1,10 +1,11 @@
 import type { APIRoute } from 'astro';
+import { env } from 'cloudflare:workers';
 import { createMenuService } from '../../../../lib/menu/service';
 
 export const prerender = false;
 
-export const GET: APIRoute = async ({ params, locals }) => {
-  const db = locals.runtime.env.DB;
+export const GET: APIRoute = async ({ params }) => {
+  const db = env.DB;
   const service = createMenuService(db);
   const id = parseInt(params.id!, 10);
 
@@ -22,8 +23,8 @@ export const GET: APIRoute = async ({ params, locals }) => {
   });
 };
 
-export const PUT: APIRoute = async ({ params, request, locals }) => {
-  const db = locals.runtime.env.DB;
+export const PUT: APIRoute = async ({ params, request }) => {
+  const db = env.DB;
   const service = createMenuService(db);
   const id = parseInt(params.id!, 10);
 

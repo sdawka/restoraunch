@@ -1,11 +1,11 @@
 import type { APIRoute } from 'astro';
+import { env } from 'cloudflare:workers';
 import { createSalesService } from '../../../lib/sales/service';
 import { createMenuService } from '../../../lib/menu/service';
 
 export const prerender = false;
 
-export const GET: APIRoute = async ({ url, locals }) => {
-  const env = locals.runtime.env;
+export const GET: APIRoute = async ({ url }) => {
 
   const start = url.searchParams.get('start');
   const end = url.searchParams.get('end');
