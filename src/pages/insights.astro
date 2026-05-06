@@ -1,0 +1,138 @@
+---
+import AppLayout from '../layouts/AppLayout.astro';
+import VarianceList from '../components/VarianceList.vue';
+
+export const prerender = false;
+---
+
+<AppLayout title="Insights">
+  <main class="insights-page">
+    <VarianceList client:load />
+
+    <a href="/model" class="model-link">
+      <span class="model-link__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+        </svg>
+      </span>
+      <span class="model-link__content">
+        <span class="model-link__label">What-If Modeling</span>
+        <span class="model-link__description">Explore scenarios before making changes</span>
+      </span>
+      <span class="model-link__arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </span>
+    </a>
+  </main>
+</AppLayout>
+
+<style>
+  .insights-page {
+    min-height: 100dvh;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .model-link {
+    position: fixed;
+    bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    left: 1rem;
+    right: 1rem;
+    max-width: 46rem;
+    margin: 0 auto;
+
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.875rem 1rem;
+
+    background: linear-gradient(135deg, oklch(0.99 0.005 60), oklch(0.97 0.01 60));
+    border: 1px solid oklch(0.90 0.02 60);
+    border-radius: 0.75rem;
+
+    text-decoration: none;
+
+    box-shadow:
+      0 4px 12px oklch(0.15 0.03 60 / 0.08),
+      0 2px 4px oklch(0.15 0.03 60 / 0.04);
+
+    transition: all 0.2s ease;
+  }
+
+  .model-link:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 20px oklch(0.15 0.03 60 / 0.12),
+      0 4px 8px oklch(0.15 0.03 60 / 0.06);
+    border-color: oklch(0.85 0.04 60);
+  }
+
+  .model-link__icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, oklch(0.55 0.12 230), oklch(0.50 0.14 230));
+    border-radius: 0.625rem;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .model-link__icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .model-link__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .model-link__label {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: oklch(0.25 0.05 60);
+  }
+
+  .model-link__description {
+    font-size: 0.75rem;
+    color: oklch(0.55 0.05 60);
+  }
+
+  .model-link__arrow {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: oklch(0.60 0.05 60);
+    transition: transform 0.2s ease;
+  }
+
+  .model-link:hover .model-link__arrow {
+    transform: translateX(2px);
+  }
+
+  .model-link__arrow svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  @media (min-width: 480px) {
+    .model-link {
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+      width: calc(100% - 2rem);
+    }
+
+    .model-link:hover {
+      transform: translateX(-50%) translateY(-2px);
+    }
+  }
+</style>
