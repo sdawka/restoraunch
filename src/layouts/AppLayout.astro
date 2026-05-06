@@ -1,11 +1,16 @@
 ---
 import '../styles/global.css';
+import Nav from '../components/Nav.vue';
+import ScanButton from '../components/ScanButton.vue';
 
 interface Props {
   title: string;
+  hideNav?: boolean;
+  hideScanButton?: boolean;
 }
 
-const { title } = Astro.props;
+const { title, hideNav = false, hideScanButton = false } = Astro.props;
+const currentPath = Astro.url.pathname;
 ---
 
 <!doctype html>
@@ -13,9 +18,63 @@ const { title } = Astro.props;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="oklch(0.98 0.01 60)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>{title} | Restoraunch</title>
   </head>
-  <body>
-    <slot />
+  <body class="app-shell">
+    <div class="app-content">
+      <slot />
+    </div>
+
+    {!hideScanButton && (
+      <ScanButton client:load />
+    )}
+
+    {!hideNav && (
+      <Nav currentPath={currentPath} client:load />
+    )}
+
+    <script>
+      // Handle scan button click - navigate to inventory with scan param
+      document.addEventListener('scan', () => {
+        window.location.href = '/inventory?scan=true';
+      });
+    </script>
+
+    <style is:global>
+      .app-shell {
+        display: flex;
+        flex-direction: column;
+        min-height: 100dvh;
+        padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+      }
+
+      .app-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Smooth scroll behavior */
+      @media (prefers-reduced-motion: no-preference) {
+        html {
+          scroll-behavior: smooth;
+        }
+      }
+
+      /* Custom focus styles */
+      :focus-visible {
+        outline: 2px solid oklch(0.55 0.12 60);
+        outline-offset: 2px;
+      }
+
+      /* Selection color */
+      ::selection {
+        background: oklch(0.85 0.08 60);
+        color: oklch(0.20 0.05 60);
+      }
+    </style>
   </body>
 </html>
