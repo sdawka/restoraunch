@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { D1Database } from '@cloudflare/workers-types';
+import { setMockEnv } from './helpers';
 
 // ---------------------------------------------------------------------------
 // Mock the menu service module before importing route handlers
@@ -207,7 +208,9 @@ describe('PUT /api/menu/[id]', () => {
     const body = { name: 'Burger Updated', price: 14.99 };
 
     // PUT updates name/price directly on db — supply a mock db and verify setRecipe is NOT called
-    const res = await itemPUT(makeCtx({ params: { id: '1' }, body, db: makeMockDb() }));
+    const db = makeMockDb();
+    setMockEnv({ db });
+    const res = await itemPUT(makeCtx({ params: { id: '1' }, body }));
     const { status } = await parseResponse(res);
 
     expect(status).toBe(200);

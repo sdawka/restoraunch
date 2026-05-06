@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createMockDb, parseJson } from './helpers';
+import { createMockDb, parseJson, setMockEnv } from './helpers';
 
 // Mock AI service before importing routes
 vi.mock('../../src/lib/ai/service', () => ({
@@ -105,6 +105,8 @@ describe('POST /api/receipts/scan', () => {
 
   it('returns parsed items with inventory matches when image is provided', async () => {
     const { db } = createMockDb();
+    const mockImagesBucket = { put: vi.fn().mockResolvedValue(undefined) };
+    setMockEnv({ db, bucket: mockImagesBucket as any });
 
     // DB returns inventory items for matching
     const dbStatement = (db as any).prepare();
@@ -190,6 +192,7 @@ describe('POST /api/receipts/scan', () => {
 
   it('propagates AI service errors', async () => {
     const { db } = createMockDb();
+    setMockEnv({ db });
 
     const dbStatement = (db as any).prepare();
     dbStatement.all.mockResolvedValue({ results: [] });
@@ -216,7 +219,7 @@ describe('POST /api/receipts/confirm', () => {
   });
 
   it('creates purchase record and updates inventory for each item', async () => {
-    const { context, mockRun } = createConfirmContext({
+    const { context, db: confirmDb, mockRun } = createConfirmContext({
       supplierId: 1,
       locationId: 1,
       photoUrl: 'http://localhost/images/receipts/123-receipt.jpg',
@@ -227,6 +230,7 @@ describe('POST /api/receipts/confirm', () => {
       total: 149.85,
       purchaseDate: '2024-03-15',
     });
+    setMockEnv({ db: confirmDb });
 
     const mockAddFromPurchase = vi.fn().mockResolvedValue({ id: 1, quantity: 20, cost_per_unit: 4.5, isLowStock: false });
     mockCreateInventoryService.mockReturnValue({
@@ -251,12 +255,13 @@ describe('POST /api/receipts/confirm', () => {
   });
 
   it('returns 400 when required fields are missing', async () => {
-    const { context } = createConfirmContext({
+    const { context, db: confirmDb } = createConfirmContext({
       // supplierId missing
       locationId: 1,
       items: [{ inventoryItemId: 1, quantity: 5, unitCost: 4.99 }],
       purchaseDate: '2024-03-15',
     });
+    setMockEnv({ db: confirmDb });
 
     const response = await confirmPOST(context);
     const body = await parseJson(response);
@@ -266,13 +271,14 @@ describe('POST /api/receipts/confirm', () => {
   });
 
   it('returns 400 when items array is empty', async () => {
-    const { context } = createConfirmContext({
+    const { context, db: confirmDb } = createConfirmContext({
       supplierId: 1,
       locationId: 1,
       items: [],
       total: 0,
       purchaseDate: '2024-03-15',
     });
+    setMockEnv({ db: confirmDb });
 
     const response = await confirmPOST(context);
     const body = await parseJson(response);
@@ -289,6 +295,7 @@ describe('POST /api/receipts/confirm', () => {
     });
 
     const { db } = createMockDb();
+    setMockEnv({ db });
     const ctx = {
       request,
       params: {},

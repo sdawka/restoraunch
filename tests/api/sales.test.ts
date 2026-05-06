@@ -3,6 +3,7 @@ import type { D1Database } from "@cloudflare/workers-types";
 import type { SalesService } from "../../src/lib/sales/service";
 import type { MenuService } from "../../src/lib/menu/service";
 import type { MenuItem } from "../../src/lib/db/queries";
+import { createMockDb, setMockEnv } from "./helpers";
 
 // --- module mocks ---
 
@@ -83,6 +84,8 @@ function makeMultipartRequest(body: FormData, url = "http://localhost/api/sales/
 describe("POST /api/sales/import", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    const { db } = createMockDb();
+    setMockEnv({ db });
   });
 
   it("returns 400 when content-type is not multipart/form-data", async () => {
@@ -206,6 +209,8 @@ describe("POST /api/sales/import", () => {
 describe("GET /api/sales/daily", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    const { db } = createMockDb();
+    setMockEnv({ db });
   });
 
   it("returns 400 when start or end is missing", async () => {
@@ -257,6 +262,8 @@ describe("GET /api/sales/daily", () => {
 describe("GET /api/sales/items", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    const { db } = createMockDb();
+    setMockEnv({ db });
   });
 
   it("returns 400 when start or end is missing", async () => {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { GET } from '../../src/pages/api/variance/calculate';
 import { POST } from '../../src/pages/api/variance/[id]/explain';
-import { createMockDb, createContext, parseJson } from './helpers';
+import { createMockDb, createContext, parseJson, setMockEnv } from './helpers';
 
 function createContextWithUrl(
   url: string,
@@ -14,6 +14,7 @@ function createContextWithUrl(
 describe('GET /api/variance/calculate', () => {
   it('returns results and period', async () => {
     const { db, mockAll, mockRun } = createMockDb();
+    setMockEnv({ db });
 
     mockAll
       // inventory items
@@ -42,7 +43,7 @@ describe('GET /api/variance/calculate', () => {
     const response = await GET(
       createContextWithUrl(
         'http://localhost/api/variance/calculate?locationId=1&start=2024-01-01&end=2024-01-07',
-        { db }
+        {}
       )
     );
     const data = await parseJson(response);
@@ -61,6 +62,7 @@ describe('GET /api/variance/calculate', () => {
 
   it('uses default period when no query params given', async () => {
     const { db, mockAll, mockRun } = createMockDb();
+    setMockEnv({ db });
 
     mockAll
       .mockResolvedValueOnce({ results: [] })  // inventory items (empty)
@@ -72,7 +74,7 @@ describe('GET /api/variance/calculate', () => {
     mockRun.mockResolvedValue({ success: true });
 
     const response = await GET(
-      createContextWithUrl('http://localhost/api/variance/calculate', { db })
+      createContextWithUrl('http://localhost/api/variance/calculate', {})
     );
     const data = await parseJson(response);
 
@@ -84,6 +86,7 @@ describe('GET /api/variance/calculate', () => {
 
   it('includes unresolved anomaly count', async () => {
     const { db, mockAll, mockRun } = createMockDb();
+    setMockEnv({ db });
 
     mockAll
       .mockResolvedValueOnce({
@@ -106,7 +109,7 @@ describe('GET /api/variance/calculate', () => {
     const response = await GET(
       createContextWithUrl(
         'http://localhost/api/variance/calculate?locationId=1&start=2024-01-01&end=2024-01-07',
-        { db }
+        {}
       )
     );
     const data = await parseJson(response);
@@ -119,6 +122,7 @@ describe('GET /api/variance/calculate', () => {
 describe('POST /api/variance/[id]/explain', () => {
   it('updates variance log and returns success', async () => {
     const { db, mockRun, mockFirst } = createMockDb();
+    setMockEnv({ db });
 
     mockRun.mockResolvedValue({ success: true });
     mockFirst.mockResolvedValue({
@@ -131,7 +135,6 @@ describe('POST /api/variance/[id]/explain', () => {
 
     const response = await POST(
       createContext({
-        db,
         params: { id: '5' },
         body: { type: 'waste', explanation: 'Found spilled container' },
         method: 'POST',
@@ -145,10 +148,10 @@ describe('POST /api/variance/[id]/explain', () => {
 
   it('returns 400 for invalid (non-numeric) id', async () => {
     const { db } = createMockDb();
+    setMockEnv({ db });
 
     const response = await POST(
       createContext({
-        db,
         params: { id: 'abc' },
         body: { type: 'waste', explanation: 'test' },
         method: 'POST',
@@ -168,12 +171,12 @@ describe('POST /api/variance/[id]/explain', () => {
 
     for (const type of explanationTypes) {
       const { db, mockRun, mockFirst } = createMockDb();
+      setMockEnv({ db });
       mockRun.mockResolvedValue({ success: true });
       mockFirst.mockResolvedValue({ id: 1, explanation_type: type, resolved: 1 });
 
       const response = await POST(
         createContext({
-          db,
           params: { id: '1' },
           body: { type, explanation: `Explanation for ${type}` },
           method: 'POST',

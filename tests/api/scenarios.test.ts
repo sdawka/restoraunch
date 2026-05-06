@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createMockDb, createContext, parseJson } from './helpers';
+import { createMockDb, createContext, parseJson, setMockEnv } from './helpers';
 
 // Mock service factories before importing the route
 vi.mock('../../src/lib/scenarios/service', () => ({
@@ -48,6 +48,7 @@ describe('POST /api/scenarios/model', () => {
   describe('type=new_menu_item', () => {
     it('returns projected profitability for a new menu item', async () => {
       const { db } = createMockDb();
+      setMockEnv({ db });
 
       mockInventoryService.getAll.mockResolvedValue([
         { id: 1, name: 'Chicken Breast', cost_per_unit: 4.99, unit: 'lb', quantity: 20, low_stock_threshold: 10, location_id: 1, isLowStock: false },
@@ -66,7 +67,6 @@ describe('POST /api/scenarios/model', () => {
 
       const response = await POST(
         createContext({
-          db,
           method: 'POST',
           body: {
             type: 'new_menu_item',
@@ -94,6 +94,7 @@ describe('POST /api/scenarios/model', () => {
 
     it('uses cost_per_unit=0 for unknown inventory items', async () => {
       const { db } = createMockDb();
+      setMockEnv({ db });
 
       mockInventoryService.getAll.mockResolvedValue([]);
       mockScenarioService.modelNewMenuItem.mockReturnValue({
@@ -108,7 +109,6 @@ describe('POST /api/scenarios/model', () => {
 
       const response = await POST(
         createContext({
-          db,
           method: 'POST',
           body: {
             type: 'new_menu_item',
@@ -131,6 +131,7 @@ describe('POST /api/scenarios/model', () => {
   describe('type=price_change', () => {
     it('returns margin impact of a price change', async () => {
       const { db } = createMockDb();
+      setMockEnv({ db });
 
       mockMenuService.getMenuItemWithCost.mockResolvedValue({
         id: 3,
@@ -150,7 +151,6 @@ describe('POST /api/scenarios/model', () => {
 
       const response = await POST(
         createContext({
-          db,
           method: 'POST',
           body: {
             type: 'price_change',
@@ -176,11 +176,11 @@ describe('POST /api/scenarios/model', () => {
 
     it('returns 404 when menu item does not exist', async () => {
       const { db } = createMockDb();
+      setMockEnv({ db });
       mockMenuService.getMenuItemWithCost.mockResolvedValue(null);
 
       const response = await POST(
         createContext({
-          db,
           method: 'POST',
           body: {
             type: 'price_change',
@@ -198,6 +198,7 @@ describe('POST /api/scenarios/model', () => {
   describe('type=supplier_switch', () => {
     it('returns savings projection for a supplier switch', async () => {
       const { db } = createMockDb();
+      setMockEnv({ db });
 
       mockInventoryService.getAll.mockResolvedValue([
         { id: 5, name: 'Flour', cost_per_unit: 0.8, unit: 'lb', quantity: 50, low_stock_threshold: 20, location_id: 1, isLowStock: false },
@@ -225,7 +226,6 @@ describe('POST /api/scenarios/model', () => {
 
       const response = await POST(
         createContext({
-          db,
           method: 'POST',
           body: {
             type: 'supplier_switch',
@@ -252,6 +252,7 @@ describe('POST /api/scenarios/model', () => {
   describe('type=volume_change', () => {
     it('returns revenue and profit impact of volume change', async () => {
       const { db } = createMockDb();
+      setMockEnv({ db });
 
       mockMenuService.getMenuItemWithCost.mockResolvedValue({
         id: 7,
@@ -268,7 +269,6 @@ describe('POST /api/scenarios/model', () => {
 
       const response = await POST(
         createContext({
-          db,
           method: 'POST',
           body: {
             type: 'volume_change',
@@ -293,11 +293,11 @@ describe('POST /api/scenarios/model', () => {
 
     it('returns 404 when menu item does not exist', async () => {
       const { db } = createMockDb();
+      setMockEnv({ db });
       mockMenuService.getMenuItemWithCost.mockResolvedValue(null);
 
       const response = await POST(
         createContext({
-          db,
           method: 'POST',
           body: {
             type: 'volume_change',
@@ -314,10 +314,10 @@ describe('POST /api/scenarios/model', () => {
 
   it('returns 400 for unknown scenario type', async () => {
     const { db } = createMockDb();
+    setMockEnv({ db });
 
     const response = await POST(
       createContext({
-        db,
         method: 'POST',
         body: { type: 'unknown_type', params: {} },
       })
