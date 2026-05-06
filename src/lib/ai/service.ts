@@ -82,6 +82,9 @@ export function createAIService(config: AIServiceConfig): AIService {
     }
 
     const data = await response.json();
+    if (!data.choices?.[0]?.message?.content) {
+      throw new Error("Invalid API response structure");
+    }
     return data.choices[0].message.content;
   }
 
@@ -96,7 +99,11 @@ export function createAIService(config: AIServiceConfig): AIService {
     if (jsonStr.endsWith("```")) {
       jsonStr = jsonStr.slice(0, -3);
     }
-    return JSON.parse(jsonStr.trim());
+    try {
+      return JSON.parse(jsonStr.trim());
+    } catch (e) {
+      throw new Error(`Failed to parse AI response: ${e instanceof Error ? e.message : 'Invalid JSON'}`);
+    }
   }
 
   return {
