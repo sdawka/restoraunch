@@ -1,0 +1,25 @@
+{
+  "name": "restoraunch",
+  "compatibility_date": "2024-12-01",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "assets": {
+    "directory": "dist",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "restoraunch-db",
+      "database_id": "local"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "IMAGES",
+      "bucket_name": "restoraunch-images"
+    }
+  ],
+  "vars": {
+    "OPENROUTER_API_KEY": ""
+  }
+}
