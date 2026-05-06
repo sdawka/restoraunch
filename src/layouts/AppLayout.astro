@@ -42,6 +42,8 @@ const currentPath = Astro.url.pathname;
       <Nav currentPath={currentPath} client:load />
     )}
 
+    <div id="modal-root"></div>
+
     <script>
       // Handle scan button click - navigate to inventory with scan param
       document.addEventListener('scan', () => {

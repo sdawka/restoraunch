@@ -266,7 +266,7 @@ onMounted(fetchData);
     </div>
 
     <!-- Form Modal -->
-    <Teleport to="body">
+    <Teleport to="#modal-root">
       <Transition name="modal">
         <div v-if="showForm" class="modal-overlay" @click.self="closeForm">
           <div class="modal-content">

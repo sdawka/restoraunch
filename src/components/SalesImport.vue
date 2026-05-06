@@ -135,7 +135,7 @@ function resetAndClose() {
   </button>
 
   <!-- Modal Backdrop -->
-  <Teleport to="body">
+  <Teleport to="#modal-root">
     <Transition name="modal">
       <div v-if="showModal" class="modal-backdrop" @click.self="closeModal">
         <div class="modal-content">
