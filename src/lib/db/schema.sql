@@ -117,8 +117,22 @@ CREATE TABLE IF NOT EXISTS inventory_adjustments (
     FOREIGN KEY (inventory_item_id) REFERENCES inventory_items(id)
 );
 
+-- Inventory snapshots table (point-in-time quantity records for variance calculation)
+CREATE TABLE IF NOT EXISTS inventory_snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    inventory_item_id INTEGER NOT NULL,
+    quantity REAL NOT NULL,
+    snapshot_date TEXT NOT NULL,
+    location_id INTEGER NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (inventory_item_id) REFERENCES inventory_items(id),
+    FOREIGN KEY (location_id) REFERENCES locations(id)
+);
+
 -- Create indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_inventory_items_location ON inventory_items(location_id);
 CREATE INDEX IF NOT EXISTS idx_menu_items_location ON menu_items(location_id);
 CREATE INDEX IF NOT EXISTS idx_sales_date ON sales(sale_date);
 CREATE INDEX IF NOT EXISTS idx_variance_logs_resolved ON variance_logs(resolved);
+CREATE INDEX IF NOT EXISTS idx_inventory_snapshots_item_date ON inventory_snapshots(inventory_item_id, snapshot_date);
+CREATE INDEX IF NOT EXISTS idx_inventory_snapshots_location ON inventory_snapshots(location_id);
