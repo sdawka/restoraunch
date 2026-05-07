@@ -1,4 +1,5 @@
 import type { APIContext } from 'astro'
+import { env } from 'cloudflare:workers'
 import { addUserToLocation, getUserLocations } from '../../../lib/db/users'
 import { updateUserMetadata, type LocationMetadata } from '../../../lib/auth/clerk-api'
 
@@ -8,7 +9,7 @@ export async function POST(context: APIContext): Promise<Response> {
     return new Response('Unauthorized', { status: 401 })
   }
 
-  const { DB, CLERK_SECRET_KEY } = context.locals.runtime.env
+  const { DB, CLERK_SECRET_KEY } = env
   const { name } = await context.request.json()
 
   if (!name || typeof name !== 'string' || name.trim().length === 0) {

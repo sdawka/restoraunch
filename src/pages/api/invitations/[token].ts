@@ -1,4 +1,5 @@
 import type { APIContext } from 'astro'
+import { env } from 'cloudflare:workers'
 import {
   getInvitationByToken,
   markInvitationAccepted,
@@ -18,7 +19,7 @@ export async function GET(context: APIContext): Promise<Response> {
     )
   }
 
-  const { DB } = context.locals.runtime.env
+  const { DB } = env
   const invitation = await getInvitationByToken(DB, token)
 
   if (!invitation) {
@@ -67,7 +68,7 @@ export async function POST(context: APIContext): Promise<Response> {
     )
   }
 
-  const { DB, CLERK_SECRET_KEY } = context.locals.runtime.env
+  const { DB, CLERK_SECRET_KEY } = env
 
   const invitation = await getInvitationByToken(DB, token)
   if (!invitation) {

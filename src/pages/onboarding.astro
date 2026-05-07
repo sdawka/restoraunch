@@ -1,5 +1,6 @@
 ---
 // src/pages/onboarding.astro
+import { env } from 'cloudflare:workers'
 import AppLayout from '../layouts/AppLayout.astro'
 
 const { userId } = Astro.locals.auth()
@@ -8,7 +9,7 @@ if (!userId) {
 }
 
 // Check if user already has locations
-const { DB } = Astro.locals.runtime.env
+const { DB } = env
 const locations = await DB.prepare(
   'SELECT location_id FROM user_locations WHERE user_id = ?'
 ).bind(userId).all()

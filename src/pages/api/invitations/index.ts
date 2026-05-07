@@ -1,4 +1,5 @@
 import type { APIContext } from 'astro'
+import { env } from 'cloudflare:workers'
 import { getUserRole, createInvitation, getUserById } from '../../../lib/db/users'
 import { generateInviteToken, getInviteExpiry } from '../../../lib/auth/tokens'
 import { sendInvitationEmail } from '../../../lib/auth/email'
@@ -9,7 +10,7 @@ export async function POST(context: APIContext): Promise<Response> {
     return new Response('Unauthorized', { status: 401 })
   }
 
-  const { DB, RESEND_API_KEY } = context.locals.runtime.env
+  const { DB, RESEND_API_KEY } = env
   const { email, locationId } = await context.request.json()
 
   if (!email || !locationId) {

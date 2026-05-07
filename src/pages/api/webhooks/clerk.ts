@@ -1,4 +1,5 @@
 import type { APIContext } from 'astro'
+import { env } from 'cloudflare:workers'
 import { Webhook } from 'svix'
 import { upsertUser, deleteUser } from '../../../lib/db/users'
 
@@ -14,7 +15,7 @@ interface ClerkWebhookEvent {
 }
 
 export async function POST(context: APIContext): Promise<Response> {
-  const { DB, CLERK_WEBHOOK_SECRET } = context.locals.runtime.env
+  const { DB, CLERK_WEBHOOK_SECRET } = env
 
   const payload = await context.request.text()
   const headers = {

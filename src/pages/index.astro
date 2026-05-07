@@ -1,4 +1,5 @@
 ---
+import { env } from 'cloudflare:workers'
 import AppLayout from '../layouts/AppLayout.astro';
 import DashboardCards from '../components/DashboardCards.vue';
 import TourPrompt from '../components/TourPrompt.vue';
@@ -8,7 +9,7 @@ const { userId } = Astro.locals.auth()
 let isAuthenticated = false
 if (userId) {
   isAuthenticated = true
-  const { DB } = Astro.locals.runtime.env
+  const { DB } = env
   const locations = await DB.prepare(
     'SELECT location_id FROM user_locations WHERE user_id = ?'
   ).bind(userId).all()

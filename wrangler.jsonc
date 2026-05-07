@@ -22,7 +22,13 @@
       "binding": "R2_IMAGES",
       "bucket_name": "restoraunch-images"
     }
-  ]
+  ],
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true
+    }
+  }
   // OPENROUTER_API_KEY should be set as a secret, not a var:
   // npx wrangler secret put OPENROUTER_API_KEY
 }
