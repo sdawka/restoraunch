@@ -41,6 +41,7 @@ const EXPLANATION_TYPES = [
   { value: 'other', label: 'Other', icon: 'dots' },
 ] as const
 
+const isClient = ref(false)
 const anomalies = ref<VarianceAnomaly[]>([])
 const lastResults = ref<AnalysisResult[]>([])
 const isLoading = ref(false)
@@ -167,7 +168,7 @@ function getVarianceDirection(anomaly: VarianceAnomaly): 'over' | 'under' {
 }
 
 onMounted(() => {
-  // Don't auto-fetch - let user trigger analysis
+  isClient.value = true
 })
 </script>
 
@@ -385,8 +386,8 @@ onMounted(() => {
       </p>
     </div>
 
-    <!-- Explain Modal -->
-    <Teleport to="body">
+    <!-- Explain Modal (client-only to avoid hydration mismatch) -->
+    <Teleport v-if="isClient" to="#modal-root">
       <Transition name="modal">
         <div v-if="selectedAnomaly" class="modal-overlay" @click.self="closeExplainModal">
           <div class="modal-content">

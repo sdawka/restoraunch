@@ -10,7 +10,7 @@ export class MenuPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.pageTitle = page.locator('main h1');
+    this.pageTitle = page.locator('h1:has-text("Menu")');
     this.menuList = page.locator('.menu-list, .menu-grid');
     this.addButton = page.locator('button:has-text("Add"), button:has-text("New")');
     this.menuItems = page.locator('.menu-item, .menu-card');

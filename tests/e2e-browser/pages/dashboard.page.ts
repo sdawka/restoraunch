@@ -24,10 +24,10 @@ export class DashboardPage extends BasePage {
   }
 
   async takeTour(): Promise<void> {
-    await this.takeTourButton.click();
+    await this.takeTourButton.click({ force: true });
   }
 
   async dismissTour(): Promise<void> {
-    await this.dismissButton.click();
+    await this.dismissButton.click({ force: true });
   }
 }

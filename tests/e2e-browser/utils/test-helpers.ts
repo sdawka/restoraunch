@@ -1,6 +1,8 @@
 import { Page } from '@playwright/test';
 
 export async function clearOnboardingState(page: Page): Promise<void> {
+  // Navigate to page first to get localStorage context
+  await page.goto('/');
   await page.evaluate(() => {
     localStorage.removeItem('restoraunch_onboarded');
     // Clear all coach mark keys
@@ -11,6 +13,8 @@ export async function clearOnboardingState(page: Page): Promise<void> {
 }
 
 export async function markAsOnboarded(page: Page): Promise<void> {
+  // Navigate to page first to get localStorage context
+  await page.goto('/');
   await page.evaluate(() => {
     localStorage.setItem('restoraunch_onboarded', 'true');
   });

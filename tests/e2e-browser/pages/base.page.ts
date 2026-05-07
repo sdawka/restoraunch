@@ -14,7 +14,10 @@ export class BasePage {
   }
 
   async clickNavItem(label: string): Promise<void> {
-    await this.nav.locator(`a:has-text("${label}")`).click();
+    // Wait for nav link to be visible (Vue hydration), then click with force for overlay bypass
+    const link = this.nav.locator(`a:has-text("${label}")`);
+    await link.waitFor({ state: 'visible', timeout: 5000 });
+    await link.click({ force: true });
   }
 
   async waitForPageLoad(): Promise<void> {

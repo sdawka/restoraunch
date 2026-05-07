@@ -10,7 +10,7 @@ export class ModelPage extends BasePage {
   constructor(page: Page) {
     super(page);
     this.pageTitle = page.locator('main h1');
-    this.scenarioBuilder = page.locator('.scenario-builder, [class*="scenario"]');
+    this.scenarioBuilder = page.locator('.scenario-container, .scenario-builder');
     this.calculateButton = page.locator('button:has-text("Calculate"), button:has-text("Model")');
     this.resultsSection = page.locator('.results, .scenario-results');
   }

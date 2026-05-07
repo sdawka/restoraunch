@@ -9,8 +9,8 @@ export class SalesPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.pageTitle = page.locator('main h1');
-    this.importButton = page.locator('button:has-text("Import")');
+    this.pageTitle = page.locator('h1:has-text("Sales")');
+    this.importButton = page.locator('.import-fab, button:has-text("Import")');
     this.salesList = page.locator('.sales-list, .sales-table');
     this.salesRows = page.locator('.sale-row, tbody tr');
   }

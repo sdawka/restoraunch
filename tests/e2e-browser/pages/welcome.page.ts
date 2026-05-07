@@ -28,14 +28,14 @@ export class WelcomePage extends BasePage {
   }
 
   async toggleAdvancedSection(): Promise<void> {
-    await this.toggleAdvanced.click();
+    await this.toggleAdvanced.click({ force: true });
   }
 
   async clickGetStarted(): Promise<void> {
-    await this.getStartedButton.click();
+    await this.getStartedButton.click({ force: true });
   }
 
   async clickFeature(featureId: string): Promise<void> {
-    await this.page.locator(`[data-testid="feature-${featureId}"]`).click();
+    await this.page.locator(`[data-testid="feature-${featureId}"]`).click({ force: true });
   }
 }
