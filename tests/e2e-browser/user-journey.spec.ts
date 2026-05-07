@@ -1,12 +1,14 @@
 import { test, expect } from '@playwright/test';
-import { DashboardPage } from './pages/dashboard.page';
-import { WelcomePage } from './pages/welcome.page';
-import { InventoryPage } from './pages/inventory.page';
-import { MenuPage } from './pages/menu.page';
-import { SalesPage } from './pages/sales.page';
-import { InsightsPage } from './pages/insights.page';
-import { ModelPage } from './pages/model.page';
-import { clearOnboardingState, markAsOnboarded, waitForLoadingComplete } from './utils/test-helpers';
+import {
+  DashboardPage,
+  WelcomePage,
+  InventoryPage,
+  MenuPage,
+  SalesPage,
+  InsightsPage,
+  ModelPage,
+} from './pages';
+import { clearOnboardingState, markAsOnboarded } from './utils/test-helpers';
 
 test.describe('User Journey', () => {
   test.describe('Onboarding Flow', () => {
