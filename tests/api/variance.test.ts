@@ -127,6 +127,7 @@ describe('POST /api/variance/[id]/explain', () => {
     mockRun.mockResolvedValue({ success: true });
     mockFirst.mockResolvedValue({
       id: 5,
+      location_id: 1,
       inventory_item_id: 1,
       explanation: 'Found spilled container',
       explanation_type: 'waste',
@@ -173,7 +174,7 @@ describe('POST /api/variance/[id]/explain', () => {
       const { db, mockRun, mockFirst } = createMockDb();
       setMockEnv({ db });
       mockRun.mockResolvedValue({ success: true });
-      mockFirst.mockResolvedValue({ id: 1, explanation_type: type, resolved: 1 });
+      mockFirst.mockResolvedValue({ id: 1, location_id: 1, explanation_type: type, resolved: 1 });
 
       const response = await POST(
         createContext({

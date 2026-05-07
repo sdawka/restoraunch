@@ -75,13 +75,13 @@ describe('PUT /api/inventory/[id]', () => {
     expect(data).toEqual({ success: true });
   });
 
-  it('throws when item id does not exist', async () => {
+  it('returns 403 when item does not exist', async () => {
     const { db, mockFirst } = createMockDb();
     setMockEnv({ db });
     mockFirst.mockResolvedValue(null);
 
-    await expect(
-      PUT(createContext({ params: { id: '999' }, body: { delta: -1 } }))
-    ).rejects.toThrow('Inventory item not found');
+    const response = await PUT(createContext({ params: { id: '999' }, body: { delta: -1 } }));
+
+    expect(response.status).toBe(403);
   });
 });

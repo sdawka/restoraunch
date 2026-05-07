@@ -20,8 +20,9 @@ vi.mock('../../src/lib/menu/service', () => ({
 }));
 
 // Import route handlers after mock is in place
-import { GET as indexGET, POST as indexPOST } from '../../src/pages/api/menu/index';
-import { GET as itemGET, PUT as itemPUT } from '../../src/pages/api/menu/[id]/index';
+// Note: Index GET handlers removed in favor of SSR - only POST/PUT remain
+import { POST as indexPOST } from '../../src/pages/api/menu/index';
+import { PUT as itemPUT } from '../../src/pages/api/menu/[id]/index';
 import { GET as recipeGET } from '../../src/pages/api/menu/[id]/recipe';
 
 // ---------------------------------------------------------------------------
@@ -43,7 +44,7 @@ function makeCtx(overrides: {
 
   return {
     params: overrides.params ?? {},
-    locals: { runtime: { env: { DB: db } } },
+    locals: { runtime: { env: { DB: db } }, location: { locationId: 1, role: 'admin' as const } },
     request: {
       json: vi.fn().mockResolvedValue(overrides.body ?? {}),
     },
@@ -58,35 +59,7 @@ async function parseResponse(res: Response) {
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('GET /api/menu', () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it('returns items with ingredientCost and marginPercent', async () => {
-    const items = [
-      { id: 1, name: 'Burger', price: 12.99, ingredientCost: 2.50, margin: 10.49, marginPercent: 80.75 },
-      { id: 2, name: 'Fries',  price:  4.99, ingredientCost: 0.50, margin:  4.49, marginPercent: 89.98 },
-    ];
-    mockService.getAllWithCosts.mockResolvedValue(items);
-
-    const res = await indexGET(makeCtx());
-    const { status, body } = await parseResponse(res);
-
-    expect(status).toBe(200);
-    expect(body).toHaveLength(2);
-    expect(body[0]).toMatchObject({ ingredientCost: 2.50, marginPercent: 80.75 });
-    expect(body[1]).toMatchObject({ ingredientCost: 0.50, marginPercent: 89.98 });
-  });
-
-  it('returns empty array when no menu items exist', async () => {
-    mockService.getAllWithCosts.mockResolvedValue([]);
-
-    const res = await indexGET(makeCtx());
-    const { status, body } = await parseResponse(res);
-
-    expect(status).toBe(200);
-    expect(body).toEqual([]);
-  });
-});
+// Note: GET /api/menu tests removed - handler replaced by SSR
 
 describe('POST /api/menu', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -157,36 +130,13 @@ describe('POST /api/menu', () => {
   });
 });
 
-describe('GET /api/menu/[id]', () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it('returns menu item with cost fields', async () => {
-    const item = { id: 1, name: 'Burger', price: 12.99, ingredientCost: 2.50, margin: 10.49, marginPercent: 80.75 };
-    mockService.getMenuItemWithCost.mockResolvedValue(item);
-
-    const res = await itemGET(makeCtx({ params: { id: '1' } }));
-    const { status, body } = await parseResponse(res);
-
-    expect(status).toBe(200);
-    expect(body).toMatchObject({ id: 1, ingredientCost: 2.50, marginPercent: 80.75 });
-  });
-
-  it('returns 404 when item does not exist', async () => {
-    mockService.getMenuItemWithCost.mockResolvedValue(null);
-
-    const res = await itemGET(makeCtx({ params: { id: '999' } }));
-    const { status, body } = await parseResponse(res);
-
-    expect(status).toBe(404);
-    expect(body).toMatchObject({ error: 'Not found' });
-  });
-});
+// Note: GET /api/menu/[id] tests removed - handler replaced by SSR
 
 describe('PUT /api/menu/[id]', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('updates recipe when recipe field is provided', async () => {
-    const updated = { id: 1, name: 'Burger', price: 12.99, ingredientCost: 3.00, margin: 9.99, marginPercent: 76.90 };
+    const updated = { id: 1, name: 'Burger', price: 12.99, ingredientCost: 3.00, margin: 9.99, marginPercent: 76.90, location_id: 1 };
     mockService.setRecipe.mockResolvedValue(undefined);
     mockService.getMenuItemWithCost.mockResolvedValue(updated);
 
@@ -202,7 +152,7 @@ describe('PUT /api/menu/[id]', () => {
   });
 
   it('returns updated item without calling setRecipe when recipe is omitted', async () => {
-    const updated = { id: 1, name: 'Burger Updated', price: 14.99, ingredientCost: 2.50, margin: 12.49, marginPercent: 83.32 };
+    const updated = { id: 1, name: 'Burger Updated', price: 14.99, ingredientCost: 2.50, margin: 12.49, marginPercent: 83.32, location_id: 1 };
     mockService.getMenuItemWithCost.mockResolvedValue(updated);
 
     const body = { name: 'Burger Updated', price: 14.99 };

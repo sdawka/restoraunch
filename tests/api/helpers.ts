@@ -40,9 +40,11 @@ export function createContext(
     params?: Record<string, string>;
     body?: unknown;
     method?: string;
+    locationId?: number;
+    role?: 'admin' | 'manager';
   } = {}
 ) {
-  const { db, bucket, params = {}, body, method = body !== undefined ? 'PUT' : 'GET' } = options;
+  const { db, bucket, params = {}, body, method = body !== undefined ? 'PUT' : 'GET', locationId = 1, role = 'admin' } = options;
 
   const request = new Request('http://localhost/api/test', {
     method,
@@ -62,6 +64,7 @@ export function createContext(
           ...(bucket && { RECEIPTS_BUCKET: bucket }),
         },
       },
+      location: { locationId, role },
     },
     // APIRoute context requires these — routes only use request/params/locals
     redirect: vi.fn(),

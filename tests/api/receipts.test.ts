@@ -41,6 +41,7 @@ function createScanContext(options: {
           ...(db && { DB: db }),
         },
       },
+      location: { locationId: 1, role: 'admin' as const },
     },
     redirect: vi.fn(),
     props: {},
@@ -69,6 +70,7 @@ function createConfirmContext(body: unknown) {
       params: {},
       locals: {
         runtime: { env: { DB: db } },
+        location: { locationId: 1, role: 'admin' as const },
       },
       redirect: vi.fn(),
       props: {},
@@ -172,6 +174,7 @@ describe('POST /api/receipts/scan', () => {
             OPENROUTER_API_KEY: 'test-api-key',
           },
         },
+        location: { locationId: 1, role: 'admin' as const },
       },
       redirect: vi.fn(),
       props: {},
@@ -299,7 +302,7 @@ describe('POST /api/receipts/confirm', () => {
     const ctx = {
       request,
       params: {},
-      locals: { runtime: { env: { DB: db } } },
+      locals: { runtime: { env: { DB: db } }, location: { locationId: 1, role: 'admin' as const } },
       redirect: vi.fn(),
       props: {},
       url: new URL('http://localhost/api/receipts/confirm'),

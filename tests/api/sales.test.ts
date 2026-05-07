@@ -52,7 +52,7 @@ function makeEnv() {
 }
 
 function makeLocals(env = makeEnv()) {
-  return { runtime: { env } };
+  return { runtime: { env }, location: { locationId: 1, role: 'admin' as const } };
 }
 
 function makeGetContext(params: Record<string, string> = {}) {
