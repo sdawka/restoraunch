@@ -1,6 +1,6 @@
 ---
-// src/pages/sign-in/[[...sign-in]].astro
 import { SignIn } from '@clerk/astro/components'
+import '../../styles/global.css'
 ---
 
 <html lang="en">
@@ -9,7 +9,7 @@ import { SignIn } from '@clerk/astro/components'
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sign In - Restoraunch</title>
   </head>
-  <body class="min-h-screen bg-gray-50 flex items-center justify-center">
+  <body class="min-h-screen bg-stone-50 flex items-center justify-center">
     <div class="w-full max-w-md p-4">
       <SignIn />
     </div>
