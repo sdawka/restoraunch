@@ -200,4 +200,53 @@ test.describe('User Journey', () => {
       await expect(sales.importButton).toBeVisible();
     });
   });
+
+  test.describe('Insights Flow', () => {
+    test.beforeEach(async ({ page }) => {
+      await markAsOnboarded(page);
+    });
+
+    test('can navigate to insights page', async ({ page }) => {
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.clickNavItem('Insights');
+
+      await expect(page).toHaveURL(/\/insights/);
+      const insights = new InsightsPage(page);
+      await expect(insights.pageTitle).toContainText(/Insights/i);
+    });
+
+    test('insights page loads variance section', async ({ page }) => {
+      const insights = new InsightsPage(page);
+      await insights.goto();
+      await insights.waitForInsightsLoad();
+
+      // Should have variance analysis section
+      const hasVariance = await insights.hasVarianceResults();
+      const hasEmptyState = await page.locator('.empty-state, text=/no.*variance/i').isVisible().catch(() => false);
+      expect(hasVariance || hasEmptyState).toBe(true);
+    });
+  });
+
+  test.describe('Scenario Modeling Flow', () => {
+    test.beforeEach(async ({ page }) => {
+      await markAsOnboarded(page);
+    });
+
+    test('can navigate to model page', async ({ page }) => {
+      const model = new ModelPage(page);
+      await model.goto();
+
+      await expect(page).toHaveURL(/\/model/);
+    });
+
+    test('scenario builder loads', async ({ page }) => {
+      const model = new ModelPage(page);
+      await model.goto();
+      await model.waitForModelLoad();
+
+      const hasBuilder = await model.hasScenarioBuilder();
+      expect(hasBuilder).toBe(true);
+    });
+  });
 });
