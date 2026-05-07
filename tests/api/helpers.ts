@@ -82,7 +82,7 @@ export async function parseJson(response: Response) {
 
 export function setMockEnv(options: { db?: D1Database; bucket?: R2Bucket; apiKey?: string }) {
   if (options.db) mockEnv.DB = options.db;
-  if (options.bucket) mockEnv.IMAGES = options.bucket;
+  if (options.bucket) mockEnv.R2_IMAGES = options.bucket;
   if (options.apiKey) mockEnv.OPENROUTER_API_KEY = options.apiKey;
 }
 

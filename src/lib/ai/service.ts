@@ -56,12 +56,161 @@ interface AIServiceConfig {
 }
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL = "anthropic/claude-sonnet-4-20250514";
+const DEFAULT_MODEL = "x-ai/grok-4.3";
+
+// JSON Schemas for structured outputs (OpenRouter enforces these)
+const RECEIPT_SCHEMA = {
+  name: "parsed_receipt",
+  strict: true,
+  schema: {
+    type: "object",
+    properties: {
+      vendor: { type: "string", description: "Supplier/vendor name" },
+      date: { type: "string", description: "Receipt date in YYYY-MM-DD format" },
+      total: { type: "number", description: "Total amount" },
+      items: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            quantity: { type: "number" },
+            unit: { type: "string" },
+            unitPrice: { type: "number" },
+            totalPrice: { type: "number" },
+          },
+          required: ["name", "quantity", "unit", "unitPrice", "totalPrice"],
+          additionalProperties: false,
+        },
+      },
+    },
+    required: ["vendor", "date", "total", "items"],
+    additionalProperties: false,
+  },
+};
+
+const SALES_SCHEMA = {
+  name: "parsed_sales",
+  strict: true,
+  schema: {
+    type: "object",
+    properties: {
+      date: { type: "string", description: "Sales date in YYYY-MM-DD format" },
+      items: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            quantity: { type: "number" },
+            revenue: { type: "number" },
+          },
+          required: ["name", "quantity", "revenue"],
+          additionalProperties: false,
+        },
+      },
+      totalRevenue: { type: "number" },
+    },
+    required: ["date", "items", "totalRevenue"],
+    additionalProperties: false,
+  },
+};
+
+const ITEM_MATCH_SCHEMA = {
+  name: "item_match",
+  strict: true,
+  schema: {
+    type: "object",
+    properties: {
+      matchedId: {
+        type: ["integer", "null"],
+        description: "Matched inventory item ID or null",
+      },
+      confidence: {
+        type: "number",
+        minimum: 0,
+        maximum: 1,
+        description: "Match confidence 0-1",
+      },
+      reasoning: { type: "string", description: "Match explanation" },
+    },
+    required: ["matchedId", "confidence", "reasoning"],
+    additionalProperties: false,
+  },
+};
+
+// Sanitize user-provided text to prevent prompt injection
+function sanitizeForPrompt(obj: unknown): string {
+  const json = JSON.stringify(obj, null, 2);
+  return json
+    .replace(/<\/?[a-z_]+>/gi, '')
+    .replace(/\b(ignore|disregard|forget|instead|override|system|instruction|prompt)\b/gi, '[$1]')
+    .slice(0, 2000);
+}
+
+// Fallback validators for robustness (structured outputs should already be valid)
+function validateReceipt(data: unknown): ParsedReceipt {
+  if (typeof data !== 'object' || data === null) {
+    throw new Error('Invalid response: not an object');
+  }
+  const obj = data as Record<string, unknown>;
+  const items = Array.isArray(obj.items) ? obj.items : [];
+  return {
+    vendor: typeof obj.vendor === 'string' ? obj.vendor : 'Unknown',
+    date: typeof obj.date === 'string' ? obj.date : new Date().toISOString().slice(0, 10),
+    total: typeof obj.total === 'number' ? obj.total : 0,
+    items: items.map((item: unknown) => {
+      const i = item as Record<string, unknown>;
+      return {
+        name: typeof i.name === 'string' ? i.name : 'Unknown item',
+        quantity: typeof i.quantity === 'number' ? i.quantity : 1,
+        unit: typeof i.unit === 'string' ? i.unit : 'each',
+        unitPrice: typeof i.unitPrice === 'number' ? i.unitPrice : 0,
+        totalPrice: typeof i.totalPrice === 'number' ? i.totalPrice : 0,
+      };
+    }),
+  };
+}
+
+function validateSales(data: unknown): ParsedSales {
+  if (typeof data !== 'object' || data === null) {
+    throw new Error('Invalid response: not an object');
+  }
+  const obj = data as Record<string, unknown>;
+  const items = Array.isArray(obj.items) ? obj.items : [];
+  return {
+    date: typeof obj.date === 'string' ? obj.date : new Date().toISOString().slice(0, 10),
+    totalRevenue: typeof obj.totalRevenue === 'number' ? obj.totalRevenue : 0,
+    items: items.map((item: unknown) => {
+      const i = item as Record<string, unknown>;
+      return {
+        name: typeof i.name === 'string' ? i.name : 'Unknown item',
+        quantity: typeof i.quantity === 'number' ? i.quantity : 0,
+        revenue: typeof i.revenue === 'number' ? i.revenue : 0,
+      };
+    }),
+  };
+}
+
+function validateItemMatch(data: unknown): ItemMatch {
+  if (typeof data !== 'object' || data === null) {
+    throw new Error('Invalid response: not an object');
+  }
+  const obj = data as Record<string, unknown>;
+  return {
+    matchedId: typeof obj.matchedId === 'number' ? obj.matchedId : null,
+    confidence: typeof obj.confidence === 'number' ? Math.max(0, Math.min(1, obj.confidence)) : 0,
+    reasoning: typeof obj.reasoning === 'string' ? obj.reasoning : 'No reasoning provided',
+  };
+}
 
 export function createAIService(config: AIServiceConfig): AIService {
   const { apiKey, fetchFn = fetch, model = DEFAULT_MODEL } = config;
 
-  async function callAPI(messages: unknown[]): Promise<string> {
+  async function callAPI<T>(
+    messages: unknown[],
+    schema: { name: string; strict: boolean; schema: object }
+  ): Promise<T> {
     const response = await fetchFn(OPENROUTER_URL, {
       method: "POST",
       headers: {
@@ -74,36 +223,30 @@ export function createAIService(config: AIServiceConfig): AIService {
         model,
         messages,
         max_tokens: 4096,
+        response_format: {
+          type: "json_schema",
+          json_schema: schema,
+        },
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      let detail = '';
+      try {
+        detail = await response.text();
+      } catch {
+        // response.text() may not be available in all environments
+      }
+      throw new Error(`API request failed: ${response.status}${detail ? ` ${detail.slice(0, 200)}` : ''}`);
     }
 
     const data = await response.json();
     if (!data.choices?.[0]?.message?.content) {
       throw new Error("Invalid API response structure");
     }
-    return data.choices[0].message.content;
-  }
 
-  function parseJSONResponse<T>(content: string): T {
-    // Handle potential markdown code blocks
-    let jsonStr = content.trim();
-    if (jsonStr.startsWith("```json")) {
-      jsonStr = jsonStr.slice(7);
-    } else if (jsonStr.startsWith("```")) {
-      jsonStr = jsonStr.slice(3);
-    }
-    if (jsonStr.endsWith("```")) {
-      jsonStr = jsonStr.slice(0, -3);
-    }
-    try {
-      return JSON.parse(jsonStr.trim());
-    } catch (e) {
-      throw new Error(`Failed to parse AI response: ${e instanceof Error ? e.message : 'Invalid JSON'}`);
-    }
+    // Structured outputs guarantee valid JSON matching schema
+    return JSON.parse(data.choices[0].message.content);
   }
 
   return {
@@ -113,16 +256,13 @@ export function createAIService(config: AIServiceConfig): AIService {
           role: "user",
           content: [
             { type: "text", text: RECEIPT_PARSE_PROMPT },
-            {
-              type: "image_url",
-              image_url: { url: imageDataUrl },
-            },
+            { type: "image_url", image_url: { url: imageDataUrl } },
           ],
         },
       ];
 
-      const response = await callAPI(messages);
-      return parseJSONResponse<ParsedReceipt>(response);
+      const result = await callAPI<unknown>(messages, RECEIPT_SCHEMA);
+      return validateReceipt(result);
     },
 
     async parsePOSScreen(imageDataUrl: string): Promise<ParsedSales> {
@@ -131,35 +271,39 @@ export function createAIService(config: AIServiceConfig): AIService {
           role: "user",
           content: [
             { type: "text", text: POS_PARSE_PROMPT },
-            {
-              type: "image_url",
-              image_url: { url: imageDataUrl },
-            },
+            { type: "image_url", image_url: { url: imageDataUrl } },
           ],
         },
       ];
 
-      const response = await callAPI(messages);
-      return parseJSONResponse<ParsedSales>(response);
+      const result = await callAPI<unknown>(messages, SALES_SCHEMA);
+      return validateSales(result);
     },
 
     async matchInventoryItem(
       receiptItem: { name: string; unit: string },
       inventoryItems: InventoryItemForMatch[]
     ): Promise<ItemMatch> {
+      const sanitizedReceiptItem = sanitizeForPrompt({
+        name: String(receiptItem.name).slice(0, 200),
+        unit: String(receiptItem.unit).slice(0, 20),
+      });
+      const sanitizedInventory = sanitizeForPrompt(
+        inventoryItems.slice(0, 50).map(item => ({
+          id: item.id,
+          name: String(item.name).slice(0, 200),
+          unit: String(item.unit).slice(0, 20),
+        }))
+      );
+
       const prompt = ITEM_MATCH_PROMPT
-        .replace("{receiptItem}", JSON.stringify(receiptItem, null, 2))
-        .replace("{inventoryItems}", JSON.stringify(inventoryItems, null, 2));
+        .replace("{receiptItem}", sanitizedReceiptItem)
+        .replace("{inventoryItems}", sanitizedInventory);
 
-      const messages = [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ];
+      const messages = [{ role: "user", content: prompt }];
 
-      const response = await callAPI(messages);
-      return parseJSONResponse<ItemMatch>(response);
+      const result = await callAPI<unknown>(messages, ITEM_MATCH_SCHEMA);
+      return validateItemMatch(result);
     },
   };
 }

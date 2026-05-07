@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 // Create a mutable env object that tests can modify
 export const mockEnv = {
   DB: null as unknown,
-  IMAGES: null as unknown,
+  R2_IMAGES: null as unknown,
   OPENROUTER_API_KEY: 'test-api-key',
 };
 

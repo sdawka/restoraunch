@@ -26,7 +26,7 @@ export const POST: APIRoute = async ({ request }) => {
   if (file) {
     const arrayBuffer = await file.arrayBuffer();
     const key = `pos/${Date.now()}-${file.name}`;
-    await env.IMAGES.put(key, arrayBuffer, {
+    await env.R2_IMAGES.put(key, arrayBuffer, {
       httpMetadata: { contentType: file.type },
     });
 

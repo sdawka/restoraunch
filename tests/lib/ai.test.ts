@@ -42,7 +42,7 @@ describe("AI Service", () => {
       expect(options.headers["Content-Type"]).toBe("application/json");
 
       const body = JSON.parse(options.body);
-      expect(body.model).toContain("claude");
+      expect(body.model).toBe("x-ai/grok-4.3");
       expect(body.messages[0].content).toContainEqual(
         expect.objectContaining({ type: "image_url" })
       );
