@@ -1,0 +1,73 @@
+---
+// src/pages/invite/[token].astro
+import AppLayout from '../../layouts/AppLayout.astro'
+
+const { token } = Astro.params
+const { userId } = Astro.locals.auth()
+
+// Validate token
+const response = await fetch(`${Astro.url.origin}/api/invitations/${token}`)
+const invitation = await response.json()
+
+// If not authenticated, redirect to sign-up with return URL
+if (!userId && invitation.valid) {
+  return Astro.redirect(`/sign-up?redirect_url=/invite/${token}`)
+}
+---
+
+<AppLayout title="Accept Invitation">
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div class="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+      {invitation.valid ? (
+        <>
+          <h1 class="text-2xl font-bold text-gray-900 mb-4">You're Invited!</h1>
+          <p class="text-gray-600 mb-6">
+            {invitation.inviterName} has invited you to join
+            <strong class="text-gray-900"> {invitation.locationName}</strong>
+          </p>
+          <button
+            id="accept-btn"
+            data-token={token}
+            class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition"
+          >
+            Accept Invitation
+          </button>
+        </>
+      ) : (
+        <>
+          <h1 class="text-2xl font-bold text-red-600 mb-4">Invalid Invitation</h1>
+          <p class="text-gray-600 mb-6">{invitation.error}</p>
+          <a href="/" class="text-blue-600 hover:underline">Go to homepage</a>
+        </>
+      )}
+    </div>
+  </div>
+</AppLayout>
+
+<script>
+  const btn = document.getElementById('accept-btn')
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      const token = btn.dataset.token
+      btn.textContent = 'Accepting...'
+      btn.disabled = true
+
+      try {
+        const response = await fetch(`/api/invitations/${token}`, { method: 'POST' })
+        const data = await response.json()
+
+        if (data.success) {
+          window.location.href = '/'
+        } else {
+          alert(data.error || 'Failed to accept invitation')
+          btn.textContent = 'Accept Invitation'
+          btn.disabled = false
+        }
+      } catch {
+        alert('Network error')
+        btn.textContent = 'Accept Invitation'
+        btn.disabled = false
+      }
+    })
+  }
+</script>
