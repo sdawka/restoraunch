@@ -118,12 +118,18 @@ import SalesImport from '../components/SalesImport.vue';
   }
 
   .header-title h1 {
-    font-family: 'Instrument Serif', Georgia, serif;
-    font-size: 2rem;
-    font-weight: 400;
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 600;
     color: oklch(0.22 0.04 60);
     letter-spacing: -0.02em;
     line-height: 1.1;
+    animation: fadeIn 400ms var(--ease-out-expo) both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .subtitle {
@@ -247,6 +253,30 @@ import SalesImport from '../components/SalesImport.vue';
     flex-direction: column;
     position: relative;
     overflow: hidden;
+    animation: cardEnter 500ms var(--ease-out-expo) both;
+    transition: transform var(--duration-normal) var(--ease-smooth),
+                box-shadow var(--duration-normal) var(--ease-smooth);
+  }
+
+  .summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .summary-card:nth-child(1) { animation-delay: 100ms; }
+  .summary-card:nth-child(2) { animation-delay: 150ms; }
+  .summary-card:nth-child(3) { animation-delay: 200ms; }
+
+  @keyframes cardEnter {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .summary-card,
+    .header-title h1 {
+      animation: none;
+    }
   }
 
   .summary-card::before {
@@ -279,7 +309,7 @@ import SalesImport from '../components/SalesImport.vue';
   }
 
   .card-value {
-    font-family: 'DM Mono', 'SF Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 1.25rem;
     font-weight: 500;
     color: oklch(0.22 0.04 60);

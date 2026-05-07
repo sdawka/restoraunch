@@ -60,6 +60,25 @@ onMounted(() => {
   border: 1px solid oklch(0.88 0.06 60);
   border-radius: 12px;
   margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px oklch(0.25 0.03 60 / 0.06);
+  animation: slideIn 500ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-prompt {
+    animation: none;
+  }
 }
 
 @media (min-width: 480px) {
@@ -123,8 +142,12 @@ onMounted(() => {
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--duration-fast, 150ms) var(--ease-smooth, ease);
   border: none;
+}
+
+.btn:active {
+  transform: scale(0.97);
 }
 
 .btn-sm {
@@ -135,10 +158,17 @@ onMounted(() => {
 .btn-primary {
   background: oklch(0.45 0.12 60);
   color: white;
+  box-shadow: 0 2px 6px oklch(0.45 0.12 60 / 0.25);
 }
 
 .btn-primary:hover {
   background: oklch(0.40 0.14 60);
+  box-shadow: 0 3px 8px oklch(0.45 0.12 60 / 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.97);
 }
 
 .btn-secondary {

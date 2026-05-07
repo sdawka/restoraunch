@@ -326,12 +326,30 @@ onMounted(() => {
 .metric-card {
   position: relative;
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform var(--duration-normal, 250ms) var(--ease-smooth, ease),
+              box-shadow var(--duration-normal, 250ms) var(--ease-smooth, ease);
+  animation: cardEnter 500ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
 
+.metric-card:nth-child(1) { animation-delay: 0ms; }
+.metric-card:nth-child(2) { animation-delay: 60ms; }
+.metric-card:nth-child(3) { animation-delay: 120ms; }
+.metric-card:nth-child(4) { animation-delay: 180ms; }
+
 .metric-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px oklch(0.25 0.05 60 / 0.1);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md, 0 4px 12px oklch(0.25 0.03 60 / 0.08));
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .metric-label {
@@ -344,11 +362,13 @@ onMounted(() => {
 }
 
 .metric-value {
+  font-family: var(--font-mono, 'DM Mono', ui-monospace, monospace);
   font-size: 1.75rem;
-  font-weight: 700;
+  font-weight: 500;
   line-height: 1.2;
   color: oklch(0.25 0.05 60);
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 @media (min-width: 768px) {
@@ -410,7 +430,14 @@ onMounted(() => {
 }
 
 .alerts-card {
-  transition: border-color 0.2s ease;
+  transition: border-color var(--duration-normal, 250ms) var(--ease-smooth, ease),
+              box-shadow var(--duration-normal, 250ms) var(--ease-smooth, ease);
+  animation: cardEnter 500ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+  animation-delay: 240ms;
+}
+
+.alerts-card:nth-child(2) {
+  animation-delay: 300ms;
 }
 
 .alerts-card.has-alerts {
@@ -459,8 +486,9 @@ onMounted(() => {
 }
 
 .alerts-count {
+  font-family: var(--font-mono, 'DM Mono', ui-monospace, monospace);
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: oklch(0.55 0.10 60);
 }
@@ -530,6 +558,8 @@ onMounted(() => {
 /* Activity Section */
 .activity-section {
   margin-bottom: 1.5rem;
+  animation: cardEnter 500ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+  animation-delay: 360ms;
 }
 
 .activity-card {
@@ -589,7 +619,8 @@ onMounted(() => {
 }
 
 .activity-time {
-  font-size: 0.75rem;
+  font-family: var(--font-mono, 'DM Mono', ui-monospace, monospace);
+  font-size: 0.6875rem;
   color: oklch(0.55 0.10 60);
   font-variant-numeric: tabular-nums;
 }
@@ -598,6 +629,15 @@ onMounted(() => {
   text-align: center;
   padding: 2rem 1rem;
   color: oklch(0.55 0.10 60);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .metric-card,
+  .alerts-card,
+  .activity-section {
+    animation: none;
+  }
 }
 
 /* Utility Classes */

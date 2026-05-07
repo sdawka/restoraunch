@@ -771,10 +771,17 @@ watch(selectedType, () => {
 }
 
 .header-title {
+  font-family: var(--font-display, 'Crimson Pro', Georgia, serif);
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 600;
   color: oklch(0.25 0.05 60);
   letter-spacing: -0.02em;
+  animation: fadeIn 400ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .header-subtitle {
@@ -819,13 +826,26 @@ watch(selectedType, () => {
   border: 2px solid oklch(0.92 0.02 60);
   border-radius: 0.75rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--duration-normal, 250ms) var(--ease-smooth, ease);
   text-align: center;
+  animation: cardEnter 500ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+
+.type-card:nth-child(1) { animation-delay: 50ms; }
+.type-card:nth-child(2) { animation-delay: 100ms; }
+.type-card:nth-child(3) { animation-delay: 150ms; }
+.type-card:nth-child(4) { animation-delay: 200ms; }
+
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .type-card:hover {
   border-color: oklch(0.80 0.05 60);
   background: oklch(0.99 0.005 60);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px oklch(0.25 0.03 60 / 0.08);
 }
 
 .type-card--selected {
@@ -1289,5 +1309,12 @@ watch(selectedType, () => {
 .results-leave-to {
   opacity: 0;
   transform: translateY(-20px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-title,
+  .type-card {
+    animation: none;
+  }
 }
 </style>

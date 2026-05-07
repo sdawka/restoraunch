@@ -218,15 +218,26 @@ function handleFeatureClick(href: string): void {
   border-radius: 12px;
   cursor: pointer;
   text-align: left;
-  transition: all 0.15s ease;
+  transition: all var(--duration-fast, 150ms) var(--ease-smooth, ease);
   width: 100%;
+  animation: cardEnter 500ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+
+.feature-card:nth-child(1) { animation-delay: 150ms; }
+.feature-card:nth-child(2) { animation-delay: 200ms; }
+.feature-card:nth-child(3) { animation-delay: 250ms; }
+.feature-card:nth-child(4) { animation-delay: 300ms; }
+
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .feature-card:hover {
   border-color: oklch(0.80 0.06 60);
   background: oklch(0.97 0.01 60);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px oklch(0.70 0.08 60 / 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px oklch(0.70 0.08 60 / 0.15);
 }
 
 .feature-card--advanced:hover {
@@ -373,5 +384,15 @@ function handleFeatureClick(href: string): void {
 
 .btn-get-started:hover svg {
   transform: translateX(3px);
+}
+
+.btn-get-started:active {
+  transform: translateY(0) scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feature-card {
+    animation: none;
+  }
 }
 </style>

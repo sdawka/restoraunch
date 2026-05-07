@@ -362,11 +362,27 @@ onUnmounted(() => {
   background: white;
   border-radius: 16px;
   border: 1px solid oklch(0.92 0.02 60);
-  box-shadow:
-    0 1px 3px oklch(0.5 0.03 60 / 0.08),
-    0 8px 24px oklch(0.5 0.03 60 / 0.06);
+  box-shadow: var(--shadow-elevated, 0 4px 12px oklch(0.25 0.03 60 / 0.08));
   overflow: hidden;
-  font-family: 'Source Sans 3', system-ui, sans-serif;
+  font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
+  animation: fadeInUp 500ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inventory-list {
+    animation: none;
+  }
 }
 
 /* Header */
@@ -407,7 +423,7 @@ onUnmounted(() => {
   font-weight: 600;
   color: oklch(0.25 0.03 60);
   margin: 0;
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: var(--font-display, 'Crimson Pro', Georgia, serif);
 }
 
 .card-subtitle {
@@ -804,7 +820,7 @@ onUnmounted(() => {
   font-size: 1.15rem;
   font-weight: 600;
   color: oklch(0.25 0.03 60);
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: var(--font-display, 'Crimson Pro', Georgia, serif);
 }
 
 .modal-close {

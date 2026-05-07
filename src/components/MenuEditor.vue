@@ -426,12 +426,9 @@ onMounted(fetchData);
 </template>
 
 <style scoped>
-/* Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap');
-
 .menu-editor {
-  --font-display: 'Crimson Pro', Georgia, serif;
-  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-display: var(--font-display, 'Crimson Pro', Georgia, serif);
+  --font-body: var(--font-body, 'DM Sans', system-ui, sans-serif);
 
   --paper: oklch(0.98 0.008 70);
   --paper-dark: oklch(0.95 0.012 65);

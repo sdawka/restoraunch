@@ -54,11 +54,21 @@ export const prerender = false;
 
     text-decoration: none;
 
-    box-shadow:
-      0 4px 12px oklch(0.15 0.03 60 / 0.08),
-      0 2px 4px oklch(0.15 0.03 60 / 0.04);
+    box-shadow: var(--shadow-elevated);
 
-    transition: all 0.2s ease;
+    transition: all var(--duration-normal) var(--ease-smooth);
+    animation: slideUp 500ms var(--ease-out-expo) 300ms both;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .model-link {
+      animation: none;
+    }
   }
 
   .model-link:hover {

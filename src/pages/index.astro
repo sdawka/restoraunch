@@ -24,90 +24,266 @@ if (userId) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="oklch(0.98 0.01 60)" />
     <title>Restoraunch - Restaurant Inventory Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style>
+      :root {
+        --warm-50: oklch(0.98 0.01 60);
+        --warm-100: oklch(0.95 0.02 60);
+        --warm-200: oklch(0.90 0.03 60);
+        --warm-500: oklch(0.55 0.10 60);
+        --warm-600: oklch(0.45 0.10 60);
+        --warm-700: oklch(0.35 0.08 60);
+        --warm-800: oklch(0.25 0.05 60);
+        --warm-900: oklch(0.15 0.03 60);
+        --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
       * { margin: 0; padding: 0; box-sizing: border-box; }
+
       body {
-        font-family: system-ui, -apple-system, sans-serif;
-        background: linear-gradient(135deg, #fef7ed 0%, #fff7ed 100%);
+        font-family: 'DM Sans', system-ui, sans-serif;
+        background: var(--warm-50);
+        color: var(--warm-900);
         min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
       }
+
+      /* Subtle texture overlay */
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 80% 50% at 50% -20%, oklch(0.92 0.04 60 / 0.5), transparent),
+          radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.90 0.05 45 / 0.3), transparent);
+        pointer-events: none;
+        z-index: 0;
+      }
+
       .landing {
-        max-width: 1200px;
+        position: relative;
+        z-index: 1;
+        max-width: 1100px;
         margin: 0 auto;
-        padding: 2rem;
+        padding: 1.5rem;
       }
+
+      @media (min-width: 768px) {
+        .landing { padding: 2rem 3rem; }
+      }
+
+      /* Navigation */
       .nav {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem 0;
+        padding: 0.75rem 0;
+        animation: fadeInDown 600ms var(--ease-out-expo) both;
       }
+
       .logo {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #92400e;
+        font-family: 'Crimson Pro', Georgia, serif;
+        font-size: 1.625rem;
+        font-weight: 600;
+        color: var(--warm-800);
+        letter-spacing: -0.02em;
       }
-      .nav-links { display: flex; gap: 1rem; }
+
+      .nav-links {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+
       .nav-links a {
         padding: 0.5rem 1rem;
         text-decoration: none;
-        color: #78350f;
+        color: var(--warm-700);
         font-weight: 500;
+        font-size: 0.9375rem;
         border-radius: 8px;
-        transition: background 0.2s;
+        transition: all 150ms ease;
       }
-      .nav-links a:hover { background: rgba(146, 64, 14, 0.1); }
+
+      .nav-links a:hover {
+        background: oklch(0.90 0.03 60 / 0.6);
+        color: var(--warm-800);
+      }
+
       .nav-links .cta {
-        background: #92400e;
+        background: var(--warm-700);
         color: white;
+        box-shadow: 0 2px 8px oklch(0.35 0.08 60 / 0.25);
       }
-      .nav-links .cta:hover { background: #78350f; }
+
+      .nav-links .cta:hover {
+        background: var(--warm-800);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px oklch(0.35 0.08 60 / 0.35);
+      }
+
+      .nav-links .cta:active {
+        transform: translateY(0) scale(0.98);
+      }
+
+      /* Hero */
       .hero {
         text-align: center;
-        padding: 6rem 2rem;
+        padding: 5rem 1rem 4rem;
       }
+
+      @media (min-width: 768px) {
+        .hero { padding: 7rem 2rem 5rem; }
+      }
+
       .hero h1 {
-        font-size: 3rem;
-        color: #78350f;
-        margin-bottom: 1.5rem;
-        line-height: 1.2;
+        font-family: 'Crimson Pro', Georgia, serif;
+        font-size: clamp(2.25rem, 6vw, 3.5rem);
+        font-weight: 600;
+        color: var(--warm-800);
+        margin-bottom: 1.25rem;
+        line-height: 1.15;
+        letter-spacing: -0.03em;
+        animation: fadeInUp 700ms var(--ease-out-expo) 100ms both;
       }
+
       .hero p {
-        font-size: 1.25rem;
-        color: #92400e;
-        max-width: 600px;
-        margin: 0 auto 2rem;
+        font-size: 1.125rem;
+        color: var(--warm-600);
+        max-width: 520px;
+        margin: 0 auto 2.5rem;
+        line-height: 1.6;
+        animation: fadeInUp 700ms var(--ease-out-expo) 200ms both;
       }
+
+      @media (min-width: 768px) {
+        .hero p { font-size: 1.25rem; }
+      }
+
       .hero-cta {
-        display: inline-block;
-        background: #92400e;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--warm-700);
         color: white;
         padding: 1rem 2rem;
-        border-radius: 8px;
+        border-radius: 10px;
         text-decoration: none;
         font-weight: 600;
-        font-size: 1.125rem;
-        transition: background 0.2s;
+        font-size: 1.0625rem;
+        box-shadow: 0 4px 14px oklch(0.35 0.08 60 / 0.3);
+        transition: all 200ms var(--ease-spring);
+        animation: fadeInUp 700ms var(--ease-out-expo) 300ms both;
       }
-      .hero-cta:hover { background: #78350f; }
+
+      .hero-cta:hover {
+        background: var(--warm-800);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px oklch(0.35 0.08 60 / 0.4);
+      }
+
+      .hero-cta:active {
+        transform: translateY(0) scale(0.97);
+      }
+
+      .hero-cta::after {
+        content: '→';
+        transition: transform 200ms var(--ease-spring);
+      }
+
+      .hero-cta:hover::after {
+        transform: translateX(4px);
+      }
+
+      /* Features */
       .features {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 2rem;
-        padding: 4rem 0;
+        gap: 1.5rem;
+        padding: 2rem 0 4rem;
       }
+
       .feature {
         background: white;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        padding: 1.75rem;
+        border-radius: 14px;
+        border: 1px solid var(--warm-100);
+        box-shadow: 0 2px 8px oklch(0.25 0.03 60 / 0.06);
+        transition: all 250ms var(--ease-out-expo);
       }
+
+      .feature:nth-child(1) { animation: fadeInUp 600ms var(--ease-out-expo) 400ms both; }
+      .feature:nth-child(2) { animation: fadeInUp 600ms var(--ease-out-expo) 500ms both; }
+      .feature:nth-child(3) { animation: fadeInUp 600ms var(--ease-out-expo) 600ms both; }
+
+      .feature:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px oklch(0.25 0.03 60 / 0.12);
+        border-color: var(--warm-200);
+      }
+
+      .feature-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        background: var(--warm-100);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        font-size: 1.25rem;
+      }
+
       .feature h3 {
-        color: #78350f;
+        font-family: 'DM Sans', system-ui, sans-serif;
+        font-weight: 600;
+        color: var(--warm-800);
         margin-bottom: 0.5rem;
+        font-size: 1.0625rem;
       }
-      .feature p { color: #a16207; }
+
+      .feature p {
+        color: var(--warm-600);
+        font-size: 0.9375rem;
+        line-height: 1.55;
+      }
+
+      /* Animations */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
     </style>
   </head>
   <body>
@@ -126,14 +302,17 @@ if (userId) {
       </section>
       <section class="features">
         <div class="feature">
+          <div class="feature-icon">📦</div>
           <h3>Inventory Tracking</h3>
           <p>Scan barcodes, count stock, and know exactly what you have on hand.</p>
         </div>
         <div class="feature">
+          <div class="feature-icon">📊</div>
           <h3>Cost Analysis</h3>
           <p>See your actual food costs and identify where money is going.</p>
         </div>
         <div class="feature">
+          <div class="feature-icon">👥</div>
           <h3>Team Access</h3>
           <p>Invite managers to help track inventory across locations.</p>
         </div>
@@ -187,15 +366,29 @@ if (userId) {
   }
 
   .page-title {
+    font-family: var(--font-display);
     font-size: 1.5rem;
-    font-weight: 700;
+    font-weight: 600;
     color: oklch(0.25 0.05 60);
     line-height: 1.2;
+    letter-spacing: -0.02em;
+    animation: fadeInUp 500ms var(--ease-out-expo) both;
   }
 
   @media (min-width: 768px) {
     .page-title {
       font-size: 1.75rem;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 

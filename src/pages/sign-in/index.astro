@@ -7,11 +7,49 @@ import '../../styles/global.css'
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="oklch(0.98 0.01 60)" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <title>Sign In - Restoraunch</title>
   </head>
-  <body class="min-h-screen bg-stone-50 flex items-center justify-center">
-    <div class="w-full max-w-md p-4">
+  <body class="auth-page">
+    <div class="auth-container">
+      <a href="/" class="auth-logo">Restoraunch</a>
       <SignIn />
     </div>
   </body>
 </html>
+
+<style>
+  .auth-page {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, oklch(0.98 0.01 60) 0%, oklch(0.95 0.02 60) 100%);
+    padding: 1.5rem;
+  }
+
+  .auth-container {
+    width: 100%;
+    max-width: 28rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .auth-logo {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: oklch(0.35 0.08 60);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+  }
+
+  .auth-logo:hover {
+    color: oklch(0.25 0.08 60);
+  }
+</style>

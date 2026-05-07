@@ -15,34 +15,166 @@ if (!userId && invitation.valid) {
 }
 ---
 
-<AppLayout title="Accept Invitation">
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-    <div class="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+<AppLayout title="Accept Invitation" hideNav={true} hideScanButton={true}>
+  <div class="invite-page">
+    <div class="invite-card">
       {invitation.valid ? (
         <>
-          <h1 class="text-2xl font-bold text-gray-900 mb-4">You're Invited!</h1>
-          <p class="text-gray-600 mb-6">
+          <div class="invite-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </div>
+          <h1 class="invite-title">You're Invited!</h1>
+          <p class="invite-text">
             {invitation.inviterName} has invited you to join
-            <strong class="text-gray-900"> {invitation.locationName}</strong>
+            <strong class="location-name"> {invitation.locationName}</strong>
           </p>
-          <button
-            id="accept-btn"
-            data-token={token}
-            class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition"
-          >
+          <button id="accept-btn" data-token={token} class="accept-btn">
             Accept Invitation
           </button>
         </>
       ) : (
         <>
-          <h1 class="text-2xl font-bold text-red-600 mb-4">Invalid Invitation</h1>
-          <p class="text-gray-600 mb-6">{invitation.error}</p>
-          <a href="/" class="text-blue-600 hover:underline">Go to homepage</a>
+          <div class="invite-icon invite-icon--error">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+          </div>
+          <h1 class="invite-title invite-title--error">Invalid Invitation</h1>
+          <p class="invite-text">{invitation.error}</p>
+          <a href="/" class="home-link">Go to homepage</a>
         </>
       )}
     </div>
   </div>
 </AppLayout>
+
+<style>
+  .invite-page {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: linear-gradient(180deg, oklch(0.98 0.01 60) 0%, oklch(0.95 0.02 60) 100%);
+  }
+
+  .invite-card {
+    background: white;
+    border-radius: 1rem;
+    border: 1px solid oklch(0.92 0.02 60);
+    box-shadow: var(--shadow-lg);
+    padding: 2rem;
+    max-width: 26rem;
+    width: 100%;
+    text-align: center;
+    animation: cardEnter 600ms var(--ease-out-expo) both;
+  }
+
+  @keyframes cardEnter {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .invite-icon {
+    width: 4rem;
+    height: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, oklch(0.55 0.15 140), oklch(0.60 0.12 140));
+    color: white;
+    border-radius: 1rem;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 4px 12px oklch(0.55 0.15 140 / 0.3);
+  }
+
+  .invite-icon svg {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .invite-icon--error {
+    background: linear-gradient(135deg, oklch(0.60 0.20 25), oklch(0.55 0.18 25));
+    box-shadow: 0 4px 12px oklch(0.60 0.20 25 / 0.3);
+  }
+
+  .invite-title {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: oklch(0.20 0.05 60);
+    margin: 0 0 0.75rem;
+    letter-spacing: -0.02em;
+  }
+
+  .invite-title--error {
+    color: oklch(0.50 0.18 25);
+  }
+
+  .invite-text {
+    font-size: 0.9375rem;
+    color: oklch(0.50 0.05 60);
+    margin: 0 0 1.5rem;
+    line-height: 1.5;
+  }
+
+  .location-name {
+    color: oklch(0.25 0.05 60);
+  }
+
+  .accept-btn {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    background: oklch(0.55 0.15 140);
+    color: white;
+    border: none;
+    border-radius: 0.625rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px oklch(0.55 0.15 140 / 0.3);
+    transition: all var(--duration-fast) var(--ease-smooth);
+  }
+
+  .accept-btn:hover {
+    background: oklch(0.50 0.17 140);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px oklch(0.55 0.15 140 / 0.4);
+  }
+
+  .accept-btn:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .accept-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .home-link {
+    color: oklch(0.45 0.12 60);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .home-link:hover {
+    text-decoration: underline;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .invite-card {
+      animation: none;
+    }
+  }
+</style>
 
 <script>
   const btn = document.getElementById('accept-btn')
