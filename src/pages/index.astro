@@ -1,6 +1,7 @@
 ---
 import AppLayout from '../layouts/AppLayout.astro';
 import DashboardCards from '../components/DashboardCards.vue';
+import TourPrompt from '../components/TourPrompt.vue';
 ---
 
 <AppLayout title="Dashboard">
@@ -15,6 +16,7 @@ import DashboardCards from '../components/DashboardCards.vue';
       </time>
     </header>
 
+    <TourPrompt client:load />
     <DashboardCards client:load />
   </main>
 </AppLayout>
