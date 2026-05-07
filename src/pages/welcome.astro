@@ -1,0 +1,75 @@
+---
+// src/pages/welcome.astro
+import AppLayout from '../layouts/AppLayout.astro';
+import WelcomeFeatures from '../components/WelcomeFeatures.vue';
+---
+
+<AppLayout title="Welcome" hideNav={true} hideScanButton={true}>
+  <main class="welcome-page">
+    <header class="welcome-header">
+      <div class="logo-mark">R</div>
+      <h1 class="welcome-title">Welcome to Restoraunch</h1>
+      <p class="welcome-subtitle">
+        Track inventory, manage costs, and boost your restaurant's profitability
+      </p>
+    </header>
+
+    <WelcomeFeatures client:load />
+  </main>
+</AppLayout>
+
+<style>
+  .welcome-page {
+    padding: 2rem 1rem;
+    min-height: 100dvh;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  @media (min-width: 768px) {
+    .welcome-page {
+      padding: 3rem 2rem;
+    }
+  }
+
+  .welcome-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .logo-mark {
+    width: 4rem;
+    height: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, oklch(0.45 0.12 60), oklch(0.55 0.14 60));
+    color: white;
+    font-size: 2rem;
+    font-weight: 700;
+    border-radius: 16px;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 4px 12px oklch(0.45 0.12 60 / 0.3);
+  }
+
+  .welcome-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: oklch(0.20 0.05 60);
+    margin: 0 0 0.5rem;
+    line-height: 1.2;
+  }
+
+  @media (min-width: 768px) {
+    .welcome-title {
+      font-size: 2rem;
+    }
+  }
+
+  .welcome-subtitle {
+    font-size: 1rem;
+    color: oklch(0.50 0.06 60);
+    margin: 0;
+    line-height: 1.5;
+  }
+</style>
