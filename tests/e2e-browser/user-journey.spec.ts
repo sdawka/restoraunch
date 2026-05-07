@@ -124,4 +124,80 @@ test.describe('User Journey', () => {
       await expect(inventory.modal).toBeVisible();
     });
   });
+
+  test.describe('Menu Flow', () => {
+    test.beforeEach(async ({ page }) => {
+      await markAsOnboarded(page);
+    });
+
+    test('can navigate to menu page', async ({ page }) => {
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.clickNavItem('Menu');
+
+      await expect(page).toHaveURL(/\/menu/);
+      const menu = new MenuPage(page);
+      await expect(menu.pageTitle).toContainText(/Menu/i);
+    });
+
+    test('menu list loads', async ({ page }) => {
+      const menu = new MenuPage(page);
+      await menu.goto();
+      await menu.waitForMenuLoad();
+
+      // Should have menu items or empty state
+      const hasItems = await menu.getMenuItemCount() > 0;
+      const hasEmptyState = await page.locator('.empty-state').isVisible().catch(() => false);
+      expect(hasItems || hasEmptyState).toBe(true);
+    });
+
+    test('menu items show cost information', async ({ page }) => {
+      const menu = new MenuPage(page);
+      await menu.goto();
+      await menu.waitForMenuLoad();
+
+      const hasItems = await menu.getMenuItemCount() > 0;
+      if (!hasItems) {
+        test.skip();
+        return;
+      }
+
+      // Should display cost/margin information
+      const hasCost = await menu.hasIngredientCost();
+      expect(hasCost).toBe(true);
+    });
+  });
+
+  test.describe('Sales Flow', () => {
+    test.beforeEach(async ({ page }) => {
+      await markAsOnboarded(page);
+    });
+
+    test('can navigate to sales page', async ({ page }) => {
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.clickNavItem('Sales');
+
+      await expect(page).toHaveURL(/\/sales/);
+      const sales = new SalesPage(page);
+      await expect(sales.pageTitle).toContainText(/Sales/i);
+    });
+
+    test('sales page loads', async ({ page }) => {
+      const sales = new SalesPage(page);
+      await sales.goto();
+      await sales.waitForSalesLoad();
+
+      // Page should load without error
+      await expect(sales.pageTitle).toBeVisible();
+    });
+
+    test('import button is visible', async ({ page }) => {
+      const sales = new SalesPage(page);
+      await sales.goto();
+      await sales.waitForSalesLoad();
+
+      await expect(sales.importButton).toBeVisible();
+    });
+  });
 });
