@@ -75,4 +75,53 @@ test.describe('User Journey', () => {
       await expect(dashboard.tourPrompt).not.toBeVisible();
     });
   });
+
+  test.describe('Inventory Flow', () => {
+    test.beforeEach(async ({ page }) => {
+      await markAsOnboarded(page);
+    });
+
+    test('can navigate to inventory page', async ({ page }) => {
+      const dashboard = new DashboardPage(page);
+      await dashboard.goto();
+      await dashboard.clickNavItem('Inventory');
+
+      await expect(page).toHaveURL(/\/inventory/);
+      const inventory = new InventoryPage(page);
+      await expect(inventory.pageTitle).toHaveText('Inventory');
+    });
+
+    test('inventory list loads and displays items', async ({ page }) => {
+      const inventory = new InventoryPage(page);
+      await inventory.goto();
+      await inventory.waitForInventoryLoad();
+
+      // Should have either items or empty state
+      const hasItems = await inventory.getItemCount() > 0;
+      const hasEmptyState = await page.locator('.empty-state').isVisible().catch(() => false);
+      expect(hasItems || hasEmptyState).toBe(true);
+    });
+
+    test('receipt scanner section is visible', async ({ page }) => {
+      const inventory = new InventoryPage(page);
+      await inventory.goto();
+
+      await expect(inventory.receiptScanner).toBeVisible();
+    });
+
+    test('can open adjustment modal', async ({ page }) => {
+      const inventory = new InventoryPage(page);
+      await inventory.goto();
+      await inventory.waitForInventoryLoad();
+
+      const hasItems = await inventory.getItemCount() > 0;
+      if (!hasItems) {
+        test.skip();
+        return;
+      }
+
+      await inventory.adjustButton.first().click();
+      await expect(inventory.modal).toBeVisible();
+    });
+  });
 });
