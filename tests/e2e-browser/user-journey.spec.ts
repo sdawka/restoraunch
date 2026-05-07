@@ -8,7 +8,7 @@ import {
   InsightsPage,
   ModelPage,
 } from './pages';
-import { clearOnboardingState, markAsOnboarded } from './utils/test-helpers';
+import { clearOnboardingState, markAsOnboarded, setupAuthenticatedSession } from './utils/test-helpers';
 
 test.describe('User Journey', () => {
   test.describe('Onboarding Flow', () => {
@@ -80,6 +80,7 @@ test.describe('User Journey', () => {
 
   test.describe('Inventory Flow', () => {
     test.beforeEach(async ({ page }) => {
+      await setupAuthenticatedSession(page);
       await markAsOnboarded(page);
     });
 
@@ -128,6 +129,7 @@ test.describe('User Journey', () => {
 
   test.describe('Menu Flow', () => {
     test.beforeEach(async ({ page }) => {
+      await setupAuthenticatedSession(page);
       await markAsOnboarded(page);
     });
 
@@ -171,6 +173,7 @@ test.describe('User Journey', () => {
 
   test.describe('Sales Flow', () => {
     test.beforeEach(async ({ page }) => {
+      await setupAuthenticatedSession(page);
       await markAsOnboarded(page);
     });
 
@@ -204,6 +207,7 @@ test.describe('User Journey', () => {
 
   test.describe('Insights Flow', () => {
     test.beforeEach(async ({ page }) => {
+      await setupAuthenticatedSession(page);
       await markAsOnboarded(page);
     });
 
@@ -231,6 +235,7 @@ test.describe('User Journey', () => {
 
   test.describe('Scenario Modeling Flow', () => {
     test.beforeEach(async ({ page }) => {
+      await setupAuthenticatedSession(page);
       await markAsOnboarded(page);
     });
 
