@@ -79,6 +79,16 @@ export async function getInventoryItems(
   return result.results;
 }
 
+export async function getInventoryItemById(
+  db: D1Database,
+  id: number
+): Promise<InventoryItem | null> {
+  return db
+    .prepare("SELECT * FROM inventory_items WHERE id = ?")
+    .bind(id)
+    .first<InventoryItem>();
+}
+
 export async function getMenuItems(
   db: D1Database,
   locationId?: number,

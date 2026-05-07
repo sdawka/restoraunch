@@ -1,15 +1,19 @@
-import type { APIRoute } from 'astro';
+import type { APIContext } from 'astro';
 import { env } from 'cloudflare:workers';
 import { createAIService } from '../../../lib/ai/service';
 import { getInventoryItems } from '../../../lib/db/queries';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request }) => {
+export async function POST(context: APIContext): Promise<Response> {
+  const location = context.locals.location;
+  if (!location) {
+    return new Response('Unauthorized', { status: 401 });
+  }
 
   let formData: FormData;
   try {
-    formData = await request.formData();
+    formData = await context.request.formData();
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid form data' }), {
       status: 400,
@@ -32,12 +36,12 @@ export const POST: APIRoute = async ({ request }) => {
     httpMetadata: { contentType: file.type },
   });
 
-  const imageUrl = `${new URL(request.url).origin}/images/${key}`;
+  const imageUrl = `${new URL(context.request.url).origin}/images/${key}`;
 
   const aiService = createAIService({ apiKey: env.OPENROUTER_API_KEY });
   const parsed = await aiService.parseReceipt(imageUrl);
 
-  const inventoryItems = await getInventoryItems(env.DB);
+  const inventoryItems = await getInventoryItems(env.DB, location.locationId);
   const itemsWithMatches = await Promise.all(
     parsed.items.map(async item => {
       const match = await aiService.matchInventoryItem(

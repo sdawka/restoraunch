@@ -1,4 +1,4 @@
-import type { APIRoute } from 'astro';
+import type { APIContext } from 'astro';
 import { env } from 'cloudflare:workers';
 import { createInventoryService } from '../../../lib/inventory/service';
 
@@ -12,19 +12,23 @@ interface ConfirmItem {
 
 interface ConfirmBody {
   supplierId: number;
-  locationId: number;
   photoUrl: string;
   items: ConfirmItem[];
   total: number;
   purchaseDate: string;
 }
 
-export const POST: APIRoute = async ({ request }) => {
+export async function POST(context: APIContext): Promise<Response> {
+  const location = context.locals.location;
+  if (!location) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
   const db = env.DB;
 
   let body: ConfirmBody;
   try {
-    body = await request.json() as ConfirmBody;
+    body = await context.request.json() as ConfirmBody;
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
       status: 400,
@@ -32,8 +36,8 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 
-  if (!body.supplierId || !body.locationId || !body.items?.length || !body.purchaseDate) {
-    return new Response(JSON.stringify({ error: 'Missing required fields: supplierId, locationId, items, purchaseDate' }), {
+  if (!body.supplierId || !body.items?.length || !body.purchaseDate) {
+    return new Response(JSON.stringify({ error: 'Missing required fields: supplierId, items, purchaseDate' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
@@ -46,7 +50,7 @@ export const POST: APIRoute = async ({ request }) => {
       INSERT INTO purchases (supplier_id, photo_url, total_cost, purchase_date, location_id)
       VALUES (?, ?, ?, ?, ?)
     `)
-    .bind(body.supplierId, body.photoUrl ?? null, body.total ?? 0, body.purchaseDate, body.locationId)
+    .bind(body.supplierId, body.photoUrl ?? null, body.total ?? 0, body.purchaseDate, location.locationId)
     .run();
 
   const purchaseId = purchaseResult.meta.last_row_id as number;

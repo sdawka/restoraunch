@@ -1,0 +1,150 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro'
+import { env } from 'cloudflare:workers'
+import { getUserLocations } from '../../lib/db/users'
+import { setLocationCookie } from '../../lib/auth/location'
+
+const { userId } = Astro.locals.auth()
+
+if (!userId) {
+  return Astro.redirect('/sign-in')
+}
+
+const { DB } = env
+const locations = await getUserLocations(DB, userId)
+
+if (locations.length === 0) {
+  return Astro.redirect('/welcome/pending')
+}
+
+if (locations.length === 1) {
+  const response = Astro.redirect('/inventory')
+  response.headers.set('Set-Cookie', setLocationCookie(locations[0].location_id))
+  return response
+}
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData()
+  const locationId = parseInt(formData.get('locationId') as string, 10)
+
+  const valid = locations.some(l => l.location_id === locationId)
+  if (valid) {
+    const response = Astro.redirect('/inventory')
+    response.headers.set('Set-Cookie', setLocationCookie(locationId))
+    return response
+  }
+}
+---
+
+<AppLayout title="Select Location" hideNav={true} hideScanButton={true}>
+  <main class="select-page">
+    <header class="select-header">
+      <div class="logo-mark">R</div>
+      <h1>Choose a Location</h1>
+      <p>Select which restaurant you want to manage</p>
+    </header>
+
+    <form method="POST" class="location-list">
+      {locations.map((loc) => (
+        <button
+          type="submit"
+          name="locationId"
+          value={loc.location_id}
+          class="location-card"
+        >
+          <span class="location-name">{loc.location_name}</span>
+          <span class="location-role">{loc.role}</span>
+        </button>
+      ))}
+    </form>
+  </main>
+</AppLayout>
+
+<style>
+  .select-page {
+    padding: 2rem 1rem;
+    min-height: 100dvh;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .select-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .logo-mark {
+    width: 3.5rem;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, oklch(0.45 0.12 60), oklch(0.55 0.14 60));
+    color: white;
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 600;
+    border-radius: 14px;
+    margin: 0 auto 1rem;
+    box-shadow: 0 4px 12px oklch(0.45 0.12 60 / 0.3);
+  }
+
+  .select-header h1 {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: oklch(0.20 0.05 60);
+    margin: 0 0 0.25rem;
+  }
+
+  .select-header p {
+    font-size: 0.9375rem;
+    color: oklch(0.50 0.06 60);
+    margin: 0;
+  }
+
+  .location-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .location-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: white;
+    border: 1px solid oklch(0.90 0.02 60);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 150ms ease;
+    text-align: left;
+    font-family: inherit;
+    font-size: 1rem;
+  }
+
+  .location-card:hover {
+    border-color: oklch(0.55 0.12 60);
+    box-shadow: 0 2px 8px oklch(0.55 0.12 60 / 0.15);
+  }
+
+  .location-card:active {
+    transform: scale(0.98);
+  }
+
+  .location-name {
+    font-weight: 500;
+    color: oklch(0.20 0.05 60);
+  }
+
+  .location-role {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.25rem 0.5rem;
+    background: oklch(0.95 0.02 60);
+    color: oklch(0.45 0.06 60);
+    border-radius: 4px;
+  }
+</style>

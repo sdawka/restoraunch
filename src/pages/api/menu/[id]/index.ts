@@ -1,34 +1,25 @@
-import type { APIRoute } from 'astro';
+import type { APIContext } from 'astro';
 import { env } from 'cloudflare:workers';
 import { createMenuService } from '../../../../lib/menu/service';
 
 export const prerender = false;
 
-export const GET: APIRoute = async ({ params }) => {
-  const db = env.DB;
-  const service = createMenuService(db);
-  const id = parseInt(params.id!, 10);
-
-  const item = await service.getMenuItemWithCost(id);
-
-  if (!item) {
-    return new Response(JSON.stringify({ error: 'Not found' }), {
-      status: 404,
-      headers: { 'Content-Type': 'application/json' },
-    });
+export async function PUT(context: APIContext): Promise<Response> {
+  const location = context.locals.location;
+  if (!location) {
+    return new Response('Unauthorized', { status: 401 });
   }
 
-  return new Response(JSON.stringify(item), {
-    headers: { 'Content-Type': 'application/json' },
-  });
-};
-
-export const PUT: APIRoute = async ({ params, request }) => {
   const db = env.DB;
   const service = createMenuService(db);
-  const id = parseInt(params.id!, 10);
+  const id = parseInt(context.params.id!, 10);
 
-  const body = await request.json() as {
+  const existing = await service.getMenuItemWithCost(id);
+  if (!existing || existing.location_id !== location.locationId) {
+    return new Response('Forbidden', { status: 403 });
+  }
+
+  const body = await context.request.json() as {
     name?: string;
     price?: number;
     recipe?: { inventoryItemId: number; quantityPerServing: number }[];

@@ -1,4 +1,4 @@
-import type { APIRoute } from 'astro';
+import type { APIContext } from 'astro';
 import { env } from 'cloudflare:workers';
 import { createAIService } from '../../../lib/ai/service';
 import { createSalesService } from '../../../lib/sales/service';
@@ -6,11 +6,13 @@ import { getMenuItems } from '../../../lib/db/queries';
 
 export const prerender = false;
 
-// Default location_id when none is provided in the import source
-const DEFAULT_LOCATION_ID = 1;
+export async function POST(context: APIContext): Promise<Response> {
+  const location = context.locals.location;
+  if (!location) {
+    return new Response('Unauthorized', { status: 401 });
+  }
 
-export const POST: APIRoute = async ({ request }) => {
-  const contentType = request.headers.get('content-type') || '';
+  const contentType = context.request.headers.get('content-type') || '';
 
   if (!contentType.includes('multipart/form-data')) {
     return new Response(JSON.stringify({ error: 'No valid file provided' }), {
@@ -19,7 +21,7 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 
-  const formData = await request.formData();
+  const formData = await context.request.formData();
   const file = formData.get('image') as File | null;
   const csv = formData.get('csv') as File | null;
 
@@ -30,7 +32,7 @@ export const POST: APIRoute = async ({ request }) => {
       httpMetadata: { contentType: file.type },
     });
 
-    const imageUrl = `${new URL(request.url).origin}/images/${key}`;
+    const imageUrl = `${new URL(context.request.url).origin}/images/${key}`;
     const aiService = createAIService({ apiKey: env.OPENROUTER_API_KEY });
     const parsed = await aiService.parsePOSScreen(imageUrl);
 
@@ -55,7 +57,7 @@ export const POST: APIRoute = async ({ request }) => {
         menu_item_id: s.menuItemId,
         quantity: s.quantity,
         sale_date: parsed.date,
-        location_id: DEFAULT_LOCATION_ID,
+        location_id: location.locationId,
       }))
     );
 
@@ -89,7 +91,7 @@ export const POST: APIRoute = async ({ request }) => {
           menu_item_id: menuItem.id,
           quantity: parseInt(quantityStr, 10),
           sale_date: date,
-          location_id: DEFAULT_LOCATION_ID,
+          location_id: location.locationId,
         });
         imported++;
       } else {

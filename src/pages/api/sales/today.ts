@@ -1,18 +1,23 @@
-import type { APIRoute } from 'astro';
+import type { APIContext } from 'astro';
 import { env } from 'cloudflare:workers';
 import { createSalesService } from '../../../lib/sales/service';
 import { createMenuService } from '../../../lib/menu/service';
 
 export const prerender = false;
 
-export const GET: APIRoute = async () => {
+export async function GET(context: APIContext): Promise<Response> {
+  const location = context.locals.location;
+  if (!location) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
   const db = env.DB;
   const salesService = createSalesService(db);
   const menuService = createMenuService(db);
 
   const today = new Date().toISOString().split('T')[0];
 
-  const sales = await salesService.getSalesWithProfit(menuService, today, today);
+  const sales = await salesService.getSalesWithProfit(menuService, today, today, location.locationId);
 
   const totalRevenue = sales.reduce((sum, s) => sum + s.totalRevenue, 0);
   const totalCost = sales.reduce((sum, s) => sum + s.totalCost, 0);
@@ -34,4 +39,4 @@ export const GET: APIRoute = async () => {
     recentActivity,
     date: today,
   });
-};
+}
