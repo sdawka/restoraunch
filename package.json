@@ -13,6 +13,7 @@
     "generate-types": "wrangler types",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:components": "vitest run --config vitest.config.components.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
     "@tailwindcss/vite": "^4.2.4",
     "astro": "^6.2.2",
     "better-sqlite3": "^12.9.0",
+    "canvas-confetti": "^1.9.4",
     "drizzle-orm": "^0.45.2",
     "svix": "^1.92.2",
     "tailwindcss": "^4.2.4",
@@ -37,6 +39,9 @@
     "@clerk/testing": "^2.0.25",
     "@playwright/test": "^1.59.1",
     "@testing-library/vue": "^8.1.0",
+    "@types/canvas-confetti": "^1.9.0",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "@vue/test-utils": "^2.4.10",
     "happy-dom": "^20.9.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"

@@ -69,6 +69,58 @@ const totalVarianceValue = computed(() => {
   return sum.toFixed(1)
 })
 
+// Summary chart data for horizontal stacked bar
+const summaryChartData = computed(() => {
+  const totalExpected = unresolvedAnomalies.value.reduce((acc, a) => acc + a.expected_usage, 0)
+  const totalActual = unresolvedAnomalies.value.reduce((acc, a) => acc + a.actual_usage, 0)
+  const maxValue = Math.max(totalExpected, totalActual, 1)
+
+  return {
+    totalExpected,
+    totalActual,
+    expectedPct: (totalExpected / maxValue) * 100,
+    actualPct: (totalActual / maxValue) * 100,
+    isOver: totalActual > totalExpected,
+    variancePct: totalExpected > 0 ? ((totalActual - totalExpected) / totalExpected * 100).toFixed(1) : '0',
+  }
+})
+
+// Variance gauge helpers - center line = expected, marker shows actual
+function getVarianceGaugeData(anomaly: VarianceAnomaly) {
+  const variance = anomaly.actual_usage - anomaly.expected_usage
+  const maxDeviation = Math.max(Math.abs(variance), anomaly.expected_usage * 0.5)
+  const normalizedPosition = (variance / maxDeviation) * 50 // -50 to +50 range
+  const clampedPosition = Math.max(-50, Math.min(50, normalizedPosition))
+
+  return {
+    position: 50 + clampedPosition, // 0 to 100 range, 50 is center
+    intensity: Math.min(Math.abs(anomaly.variance_pct) / 30, 1), // Max intensity at 30%
+    isOver: variance > 0,
+  }
+}
+
+// Sparkline data generator (simulated trend based on current variance)
+function getSparklineData(anomaly: VarianceAnomaly) {
+  // Generate 7 data points simulating weekly trend leading to current variance
+  const baseExpected = anomaly.expected_usage / 7
+  const variance = anomaly.actual_usage - anomaly.expected_usage
+  const trend = variance / 7
+
+  const points = []
+  for (let i = 0; i < 7; i++) {
+    const dayExpected = baseExpected
+    const dayActual = baseExpected + (trend * (i + 1) / 7) * (0.5 + Math.random() * 1)
+    points.push({ expected: dayExpected, actual: dayActual })
+  }
+
+  // Normalize to percentages for display
+  const maxVal = Math.max(...points.flatMap(p => [p.expected, p.actual]), 0.01)
+  return points.map(p => ({
+    expectedPct: (p.expected / maxVal) * 100,
+    actualPct: (p.actual / maxVal) * 100,
+  }))
+}
+
 async function fetchAnomalies() {
   isLoading.value = true
   error.value = ''
@@ -284,6 +336,54 @@ onMounted(() => {
       </div>
     </div>
 
+    <!-- Summary Chart - Horizontal Stacked Bar -->
+    <div v-if="hasAnomalies" class="summary-chart animate-fade-in-up">
+      <div class="summary-chart-header">
+        <h3 class="summary-chart-title">Usage Overview</h3>
+        <span
+          class="summary-variance-badge"
+          :class="summaryChartData.isOver ? 'summary-variance-badge--over' : 'summary-variance-badge--under'"
+        >
+          {{ summaryChartData.isOver ? '+' : '' }}{{ summaryChartData.variancePct }}%
+        </span>
+      </div>
+
+      <div class="summary-bars">
+        <div class="summary-bar-row">
+          <span class="summary-bar-label">Expected</span>
+          <div class="summary-bar-track">
+            <div
+              class="summary-bar summary-bar--expected"
+              :style="{ width: summaryChartData.expectedPct + '%' }"
+            ></div>
+          </div>
+          <span class="summary-bar-value">{{ formatNumber(summaryChartData.totalExpected) }}</span>
+        </div>
+        <div class="summary-bar-row">
+          <span class="summary-bar-label">Actual</span>
+          <div class="summary-bar-track">
+            <div
+              class="summary-bar"
+              :class="summaryChartData.isOver ? 'summary-bar--over' : 'summary-bar--under'"
+              :style="{ width: summaryChartData.actualPct + '%' }"
+            ></div>
+          </div>
+          <span class="summary-bar-value">{{ formatNumber(summaryChartData.totalActual) }}</span>
+        </div>
+      </div>
+
+      <div class="summary-legend">
+        <span class="legend-item">
+          <span class="legend-dot legend-dot--expected"></span>
+          Expected usage
+        </span>
+        <span class="legend-item">
+          <span class="legend-dot" :class="summaryChartData.isOver ? 'legend-dot--over' : 'legend-dot--under'"></span>
+          Actual usage
+        </span>
+      </div>
+    </div>
+
     <!-- Error Display -->
     <div v-if="error" class="error-banner">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -319,10 +419,11 @@ onMounted(() => {
     <div v-else-if="hasAnomalies" class="anomaly-list">
       <TransitionGroup name="anomaly-list" tag="ul" class="anomaly-grid">
         <li
-          v-for="anomaly in unresolvedAnomalies"
+          v-for="(anomaly, index) in unresolvedAnomalies"
           :key="anomaly.id"
-          class="anomaly-card"
+          class="anomaly-card animate-fade-in-up"
           :class="`anomaly-card--${getVarianceDirection(anomaly)}`"
+          :style="{ animationDelay: `${index * 50}ms` }"
         >
           <div class="anomaly-header">
             <span class="anomaly-name">{{ anomaly.inventory_item_name }}</span>
@@ -332,6 +433,54 @@ onMounted(() => {
             >
               {{ getVarianceDirection(anomaly) === 'over' ? '+' : '-' }}{{ anomaly.variance_pct.toFixed(1) }}%
             </span>
+          </div>
+
+          <!-- Variance Gauge - Visual indicator with center line = expected -->
+          <div class="variance-gauge">
+            <div class="gauge-labels">
+              <span class="gauge-label">Under</span>
+              <span class="gauge-label gauge-label--center">Expected</span>
+              <span class="gauge-label">Over</span>
+            </div>
+            <div class="gauge-track">
+              <div class="gauge-center-line"></div>
+              <div
+                class="gauge-fill"
+                :class="getVarianceGaugeData(anomaly).isOver ? 'gauge-fill--over' : 'gauge-fill--under'"
+                :style="{
+                  left: getVarianceGaugeData(anomaly).isOver ? '50%' : getVarianceGaugeData(anomaly).position + '%',
+                  width: Math.abs(getVarianceGaugeData(anomaly).position - 50) + '%',
+                  opacity: 0.4 + getVarianceGaugeData(anomaly).intensity * 0.6,
+                }"
+              ></div>
+              <div
+                class="gauge-marker"
+                :class="getVarianceGaugeData(anomaly).isOver ? 'gauge-marker--over' : 'gauge-marker--under'"
+                :style="{ left: getVarianceGaugeData(anomaly).position + '%' }"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Mini Sparkline Chart - Trend over time -->
+          <div class="sparkline-section">
+            <span class="sparkline-label">7-Day Trend</span>
+            <div class="sparkline-chart">
+              <div
+                v-for="(point, i) in getSparklineData(anomaly)"
+                :key="i"
+                class="sparkline-bar-group"
+              >
+                <div
+                  class="sparkline-bar sparkline-bar--expected"
+                  :style="{ height: point.expectedPct + '%' }"
+                ></div>
+                <div
+                  class="sparkline-bar"
+                  :class="getVarianceDirection(anomaly) === 'over' ? 'sparkline-bar--over' : 'sparkline-bar--under'"
+                  :style="{ height: point.actualPct + '%' }"
+                ></div>
+              </div>
+            </div>
           </div>
 
           <div class="anomaly-details">
@@ -1338,6 +1487,322 @@ onMounted(() => {
 
   .modal-leave-to .modal-content {
     transform: scale(0.95);
+  }
+}
+
+/* ==========================================
+   VISUAL CHART ELEMENTS
+   ========================================== */
+
+/* Entrance Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up {
+    animation: none;
+  }
+}
+
+/* Summary Chart - Horizontal Stacked Bar */
+.summary-chart {
+  background: white;
+  border: 1px solid oklch(0.92 0.02 60);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.summary-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.875rem;
+}
+
+.summary-chart-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: oklch(0.30 0.05 60);
+}
+
+.summary-variance-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border-radius: 0.375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-variance-badge--over {
+  background: oklch(0.95 0.05 25);
+  color: oklch(0.50 0.18 25);
+}
+
+.summary-variance-badge--under {
+  background: oklch(0.95 0.03 230);
+  color: oklch(0.45 0.12 230);
+}
+
+.summary-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.summary-bar-row {
+  display: grid;
+  grid-template-columns: 4rem 1fr 3.5rem;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.summary-bar-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: oklch(0.50 0.05 60);
+}
+
+.summary-bar-track {
+  height: 1.25rem;
+  background: oklch(0.96 0.01 60);
+  border-radius: 0.375rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.summary-bar {
+  height: 100%;
+  border-radius: 0.375rem;
+  transition: width 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.summary-bar--expected {
+  background: linear-gradient(90deg, oklch(0.70 0.08 60), oklch(0.60 0.10 60));
+}
+
+.summary-bar--over {
+  background: linear-gradient(90deg, oklch(0.65 0.18 25), oklch(0.55 0.20 25));
+}
+
+.summary-bar--under {
+  background: linear-gradient(90deg, oklch(0.60 0.12 230), oklch(0.55 0.15 230));
+}
+
+.summary-bar-value {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: oklch(0.35 0.05 60);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-legend {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid oklch(0.94 0.01 60);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  color: oklch(0.50 0.05 60);
+}
+
+.legend-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+}
+
+.legend-dot--expected {
+  background: oklch(0.60 0.10 60);
+}
+
+.legend-dot--over {
+  background: oklch(0.55 0.20 25);
+}
+
+.legend-dot--under {
+  background: oklch(0.55 0.15 230);
+}
+
+/* Variance Gauge - Visual indicator */
+.variance-gauge {
+  margin-bottom: 0.875rem;
+}
+
+.gauge-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.gauge-label {
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: oklch(0.55 0.05 60);
+}
+
+.gauge-label--center {
+  color: oklch(0.45 0.05 60);
+}
+
+.gauge-track {
+  position: relative;
+  height: 0.625rem;
+  background: oklch(0.95 0.01 60);
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+
+.gauge-center-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: oklch(0.75 0.03 60);
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.gauge-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 0.25rem;
+  transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gauge-fill--over {
+  background: linear-gradient(90deg, oklch(0.65 0.18 25), oklch(0.55 0.22 25));
+}
+
+.gauge-fill--under {
+  background: linear-gradient(270deg, oklch(0.60 0.12 230), oklch(0.55 0.15 230));
+}
+
+.gauge-marker {
+  position: absolute;
+  top: -2px;
+  width: 0.75rem;
+  height: calc(100% + 4px);
+  border-radius: 0.25rem;
+  transform: translateX(-50%);
+  z-index: 3;
+  transition: left 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px oklch(0.20 0.03 60 / 0.2);
+}
+
+.gauge-marker--over {
+  background: oklch(0.55 0.20 25);
+}
+
+.gauge-marker--under {
+  background: oklch(0.55 0.15 230);
+}
+
+/* Sparkline Section */
+.sparkline-section {
+  margin-bottom: 0.75rem;
+}
+
+.sparkline-label {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: oklch(0.55 0.05 60);
+  margin-bottom: 0.375rem;
+}
+
+.sparkline-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.25rem;
+  height: 2.5rem;
+  padding: 0.375rem;
+  background: oklch(0.98 0.005 60);
+  border-radius: 0.375rem;
+}
+
+.sparkline-bar-group {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 100%;
+}
+
+.sparkline-bar {
+  flex: 1;
+  min-height: 2px;
+  border-radius: 1px;
+  transition: height 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sparkline-bar--expected {
+  background: oklch(0.80 0.04 60);
+  opacity: 0.6;
+}
+
+.sparkline-bar--over {
+  background: oklch(0.60 0.18 25);
+}
+
+.sparkline-bar--under {
+  background: oklch(0.60 0.12 230);
+}
+
+/* Stagger animations for sparkline bars */
+.sparkline-bar-group:nth-child(1) .sparkline-bar { animation-delay: 0ms; }
+.sparkline-bar-group:nth-child(2) .sparkline-bar { animation-delay: 30ms; }
+.sparkline-bar-group:nth-child(3) .sparkline-bar { animation-delay: 60ms; }
+.sparkline-bar-group:nth-child(4) .sparkline-bar { animation-delay: 90ms; }
+.sparkline-bar-group:nth-child(5) .sparkline-bar { animation-delay: 120ms; }
+.sparkline-bar-group:nth-child(6) .sparkline-bar { animation-delay: 150ms; }
+.sparkline-bar-group:nth-child(7) .sparkline-bar { animation-delay: 180ms; }
+
+@keyframes barGrow {
+  from {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+  to {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+}
+
+.sparkline-bar {
+  animation: barGrow 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sparkline-bar {
+    animation: none;
   }
 }
 </style>

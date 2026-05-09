@@ -240,15 +240,20 @@ onMounted(fetchData);
           </div>
         </div>
 
-        <div class="margin-bar-container">
-          <div
-            class="margin-bar"
-            :class="getMarginClass(item.marginPercent)"
-            :style="{ width: `${Math.min(Math.max(item.marginPercent, 0), 100)}%` }"
-          ></div>
-        </div>
-        <div class="margin-percent" :class="getMarginClass(item.marginPercent)">
-          {{ item.marginPercent.toFixed(1) }}% margin
+        <!-- Enhanced margin bar -->
+        <div class="margin-bar-wrapper">
+          <div class="margin-bar-track">
+            <div
+              class="margin-bar-fill"
+              :class="getMarginClass(item.marginPercent)"
+              :style="{ '--margin-width': `${Math.min(Math.max(item.marginPercent, 0), 100)}%` }"
+            >
+              <span class="margin-bar-shimmer"></span>
+            </div>
+          </div>
+          <span class="margin-bar-label" :class="getMarginClass(item.marginPercent)">
+            {{ item.marginPercent.toFixed(0) }}%
+          </span>
         </div>
       </article>
 
@@ -384,6 +389,43 @@ onMounted(fetchData);
                 </div>
               </div>
 
+              <!-- Cost Breakdown Mini-Chart -->
+              <div v-if="recipe.length > 0" class="cost-breakdown">
+                <div class="breakdown-header">
+                  <span class="breakdown-title">Cost Breakdown</span>
+                  <span class="breakdown-total">{{ formatCurrency(recipeCost) }}</span>
+                </div>
+                <div class="breakdown-bar">
+                  <div
+                    v-for="(ingredient, index) in recipe"
+                    :key="ingredient.inventoryItemId"
+                    class="breakdown-segment"
+                    :style="{
+                      '--segment-width': recipeCost > 0 ? `${((ingredient.quantityPerServing * ingredient.costPerUnit) / recipeCost) * 100}%` : '0%',
+                      '--segment-hue': `${(index * 47) % 360}`,
+                      '--segment-delay': `${index * 50}ms`
+                    }"
+                    :title="`${ingredient.name}: ${formatCurrency(ingredient.quantityPerServing * ingredient.costPerUnit)}`"
+                  ></div>
+                </div>
+                <div class="breakdown-legend">
+                  <div
+                    v-for="(ingredient, index) in recipe.slice(0, 4)"
+                    :key="ingredient.inventoryItemId"
+                    class="legend-item"
+                  >
+                    <span class="legend-dot" :style="{ '--segment-hue': `${(index * 47) % 360}` }"></span>
+                    <span class="legend-name">{{ ingredient.name }}</span>
+                    <span class="legend-percent">
+                      {{ recipeCost > 0 ? ((ingredient.quantityPerServing * ingredient.costPerUnit) / recipeCost * 100).toFixed(0) : 0 }}%
+                    </span>
+                  </div>
+                  <div v-if="recipe.length > 4" class="legend-more">
+                    +{{ recipe.length - 4 }} more
+                  </div>
+                </div>
+              </div>
+
               <!-- Live Margin Preview -->
               <div class="margin-preview" :class="getMarginClass(liveMarginPercent)">
                 <div class="preview-row">
@@ -400,6 +442,18 @@ onMounted(fetchData);
                     {{ formatCurrency(liveMargin) }}
                     <span class="margin-badge">{{ liveMarginPercent.toFixed(1) }}%</span>
                   </span>
+                </div>
+                <!-- Preview margin bar -->
+                <div class="preview-bar-wrapper">
+                  <div class="margin-bar-track">
+                    <div
+                      class="margin-bar-fill"
+                      :class="getMarginClass(liveMarginPercent)"
+                      :style="{ '--margin-width': `${Math.min(Math.max(liveMarginPercent, 0), 100)}%` }"
+                    >
+                      <span class="margin-bar-shimmer"></span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -538,6 +592,26 @@ onMounted(fetchData);
   to { transform: rotate(360deg); }
 }
 
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes marginFillPulse {
+  0%, 100% {
+    box-shadow: 0 1px 4px currentColor / 0.3;
+  }
+  50% {
+    box-shadow: 0 2px 8px currentColor / 0.4;
+  }
+}
+
 /* Menu Grid */
 .menu-grid {
   max-width: 1200px;
@@ -554,13 +628,62 @@ onMounted(fetchData);
   border-radius: 12px;
   padding: 1.25rem;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease;
+}
+
+.menu-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    oklch(0.55 0.12 45 / 0.03) 0%,
+    transparent 50%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .menu-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px oklch(0.5 0.02 50 / 0.08);
-  border-color: oklch(0.85 0.02 60);
+  transform: translateY(-4px);
+  box-shadow:
+    0 4px 8px oklch(0.5 0.02 50 / 0.04),
+    0 12px 32px oklch(0.5 0.02 50 / 0.10);
+  border-color: oklch(0.80 0.03 55);
+}
+
+.menu-card:hover::before {
+  opacity: 1;
+}
+
+.menu-card:active {
+  transform: translateY(-2px) scale(0.99);
+  transition-duration: 0.1s;
+}
+
+.menu-card {
+  animation: cardEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.menu-card:nth-child(1) { animation-delay: 0ms; }
+.menu-card:nth-child(2) { animation-delay: 50ms; }
+.menu-card:nth-child(3) { animation-delay: 100ms; }
+.menu-card:nth-child(4) { animation-delay: 150ms; }
+.menu-card:nth-child(5) { animation-delay: 200ms; }
+.menu-card:nth-child(6) { animation-delay: 250ms; }
+.menu-card:nth-child(n+7) { animation-delay: 300ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-card {
+    animation: none;
+  }
+  .margin-bar-shimmer {
+    animation: none;
+  }
 }
 
 .card-header {
@@ -619,34 +742,136 @@ onMounted(fetchData);
   color: var(--ink);
 }
 
-.margin-bar-container {
-  height: 6px;
-  background: oklch(0.94 0.008 60);
-  border-radius: 3px;
+/* Enhanced Margin Bar */
+.margin-bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.margin-bar-track {
+  flex: 1;
+  height: 8px;
+  background: linear-gradient(
+    180deg,
+    oklch(0.92 0.008 60) 0%,
+    oklch(0.95 0.006 60) 100%
+  );
+  border-radius: 4px;
   overflow: hidden;
-  margin-bottom: 0.5rem;
+  box-shadow: inset 0 1px 2px oklch(0.5 0.02 60 / 0.08);
+  position: relative;
 }
 
-.margin-bar {
+.margin-bar-fill {
   height: 100%;
-  border-radius: 3px;
-  transition: width 0.4s ease-out;
+  width: var(--margin-width, 0%);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.margin-bar.margin-excellent { background: var(--margin-excellent); }
-.margin-bar.margin-good { background: var(--margin-good); }
-.margin-bar.margin-warning { background: var(--margin-warning); }
-.margin-bar.margin-danger { background: var(--margin-danger); }
-
-.margin-percent {
-  font-size: 0.8125rem;
-  font-weight: 500;
+.margin-bar-fill.margin-excellent {
+  background: linear-gradient(
+    90deg,
+    oklch(0.50 0.14 155) 0%,
+    oklch(0.58 0.16 155) 50%,
+    oklch(0.52 0.15 155) 100%
+  );
+  box-shadow: 0 1px 4px oklch(0.55 0.15 155 / 0.3);
 }
 
-.margin-percent.margin-excellent { color: var(--margin-excellent); }
-.margin-percent.margin-good { color: var(--margin-good); }
-.margin-percent.margin-warning { color: var(--margin-warning); }
-.margin-percent.margin-danger { color: var(--margin-danger); }
+.margin-bar-fill.margin-good {
+  background: linear-gradient(
+    90deg,
+    oklch(0.53 0.11 140) 0%,
+    oklch(0.62 0.13 140) 50%,
+    oklch(0.55 0.12 140) 100%
+  );
+  box-shadow: 0 1px 4px oklch(0.58 0.12 140 / 0.3);
+}
+
+.margin-bar-fill.margin-warning {
+  background: linear-gradient(
+    90deg,
+    oklch(0.60 0.13 80) 0%,
+    oklch(0.70 0.15 80) 50%,
+    oklch(0.62 0.14 80) 100%
+  );
+  box-shadow: 0 1px 4px oklch(0.65 0.14 80 / 0.3);
+}
+
+.margin-bar-fill.margin-danger {
+  background: linear-gradient(
+    90deg,
+    oklch(0.50 0.17 25) 0%,
+    oklch(0.58 0.19 25) 50%,
+    oklch(0.52 0.18 25) 100%
+  );
+  box-shadow: 0 1px 4px oklch(0.55 0.18 25 / 0.3);
+}
+
+/* Shimmer animation on bar */
+.margin-bar-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(1 0 0 / 0.2) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: marginShimmer 2s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+@keyframes marginShimmer {
+  0% { transform: translateX(-100%); }
+  50%, 100% { transform: translateX(100%); }
+}
+
+.menu-card:hover .margin-bar-shimmer {
+  animation-duration: 1.2s;
+}
+
+/* Margin label */
+.margin-bar-label {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 2.5rem;
+  text-align: right;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s;
+}
+
+.margin-bar-label.margin-excellent {
+  color: var(--margin-excellent);
+  background: var(--margin-excellent-bg);
+}
+
+.margin-bar-label.margin-good {
+  color: var(--margin-good);
+  background: var(--margin-good-bg);
+}
+
+.margin-bar-label.margin-warning {
+  color: var(--margin-warning);
+  background: var(--margin-warning-bg);
+}
+
+.margin-bar-label.margin-danger {
+  color: var(--margin-danger);
+  background: var(--margin-danger-bg);
+}
+
+.menu-card:hover .margin-bar-label {
+  transform: scale(1.05);
+}
 
 /* Empty state */
 .empty-state {
@@ -1002,6 +1227,126 @@ onMounted(fetchData);
   border-radius: 8px;
 }
 
+/* Cost Breakdown Mini-Chart */
+.cost-breakdown {
+  background: white;
+  border: 1px solid oklch(0.9 0.01 60);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.breakdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.breakdown-title {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ink-light);
+}
+
+.breakdown-total {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent-warm);
+}
+
+.breakdown-bar {
+  height: 12px;
+  display: flex;
+  border-radius: 6px;
+  overflow: hidden;
+  background: oklch(0.95 0.008 60);
+  box-shadow: inset 0 1px 2px oklch(0.5 0.02 60 / 0.06);
+  margin-bottom: 0.75rem;
+}
+
+.breakdown-segment {
+  height: 100%;
+  width: var(--segment-width, 0%);
+  background: oklch(0.60 0.12 var(--segment-hue, 45));
+  position: relative;
+  transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter 0.2s ease;
+  animation: segmentGrow 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: var(--segment-delay, 0ms);
+}
+
+.breakdown-segment:not(:last-child) {
+  border-right: 1px solid oklch(1 0 0 / 0.3);
+}
+
+.breakdown-segment::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    oklch(1 0 0 / 0.15) 0%,
+    transparent 50%,
+    oklch(0 0 0 / 0.05) 100%
+  );
+}
+
+.breakdown-segment:hover {
+  filter: brightness(1.1);
+  z-index: 1;
+}
+
+@keyframes segmentGrow {
+  from {
+    width: 0%;
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.breakdown-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: oklch(0.60 0.12 var(--segment-hue, 45));
+  flex-shrink: 0;
+}
+
+.legend-name {
+  color: var(--ink-light);
+  max-width: 80px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.legend-percent {
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+.legend-more {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
 /* Margin Preview */
 .margin-preview {
   background: white;
@@ -1009,6 +1354,18 @@ onMounted(fetchData);
   border-radius: 10px;
   padding: 1rem;
   margin-bottom: 1.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.margin-preview:hover {
+  border-color: oklch(0.85 0.02 60);
+  box-shadow: 0 4px 12px oklch(0.5 0.02 50 / 0.06);
+}
+
+.preview-bar-wrapper {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid oklch(0.94 0.01 60);
 }
 
 .preview-row {
