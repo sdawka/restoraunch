@@ -12,6 +12,7 @@
     "astro": "astro",
     "generate-types": "wrangler types",
     "test": "vitest run",
+    "test:components": "vitest run --config vitest.config.components.ts",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:ai-consistency": "export $(grep -v '^#' .dev.vars | xargs) && RUN_AI_CONSISTENCY_TESTS=true vitest run --config vitest.config.integration.ts"

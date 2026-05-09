@@ -2,7 +2,9 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useSampleData } from '../composables/useSampleData';
 import AnimatedNumber from './AnimatedNumber.vue';
-import { triggerChefsKiss } from '../composables/useConfetti';
+import { useConfetti } from '../composables/useConfetti';
+
+const { triggerChefsKiss } = useConfetti();
 import { DotLottieVue } from '@lottiefiles/dotlottie-vue';
 
 const { isInSampleMode, getSampleDataForType, exitSampleMode, getRestaurantTypeLabel } = useSampleData();
