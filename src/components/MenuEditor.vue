@@ -254,14 +254,14 @@ onMounted(fetchData);
 
       <!-- Empty state -->
       <div v-if="menuItems.length === 0" class="empty-state">
-        <div class="empty-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-          </svg>
-        </div>
-        <h3>No menu items yet</h3>
-        <p>Add your first dish to start tracking costs and margins</p>
-        <button class="btn-add-empty" @click="openNewForm">Create Menu Item</button>
+        <img
+          src="https://stories.freepiklabs.com/storage/53068/Recipe-book_Artboard-1.svg"
+          alt="Recipe book illustration"
+          class="empty-illustration"
+        />
+        <h3>The menu's looking lonely</h3>
+        <p>Time to put something delicious on the board</p>
+        <button class="btn-add-empty" @click="openNewForm">Let's Cook</button>
       </div>
     </div>
 
@@ -656,11 +656,10 @@ onMounted(fetchData);
   color: var(--ink-muted);
 }
 
-.empty-icon {
-  width: 64px;
-  height: 64px;
+.empty-illustration {
+  max-width: 12rem;
+  height: auto;
   margin: 0 auto 1.5rem;
-  color: oklch(0.8 0.015 60);
 }
 
 .empty-state h3 {

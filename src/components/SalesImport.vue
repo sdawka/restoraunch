@@ -84,7 +84,7 @@ async function processFile(file: File) {
     formData.append('csv', file)
   } else {
     step.value = 'error'
-    errorMessage.value = 'Unsupported file type. Please upload an image or CSV.'
+    errorMessage.value = "That file type's not on the menu. Try an image or CSV."
     return
   }
 
@@ -107,7 +107,7 @@ async function processFile(file: File) {
     step.value = 'review'
   } catch (err) {
     step.value = 'error'
-    errorMessage.value = 'Failed to process file. Please try again.'
+    errorMessage.value = 'Dropped the plate. Give it another go?'
   }
 }
 
@@ -216,7 +216,7 @@ function resetAndClose() {
             <template v-else-if="step === 'parsing'">
               <div class="progress-state">
                 <div class="progress-spinner progress-spinner--parsing"></div>
-                <p class="progress-text">Analyzing sales data...</p>
+                <p class="progress-text">Crunching the numbers...</p>
                 <p class="progress-hint">Matching items to your menu</p>
               </div>
             </template>
@@ -267,8 +267,8 @@ function resetAndClose() {
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
-                <p class="confirmed-text">Import complete!</p>
-                <p class="confirmed-hint">{{ importedCount }} sales recorded</p>
+                <p class="confirmed-text">Nailed it!</p>
+                <p class="confirmed-hint">{{ importedCount }} sales in the books</p>
                 <button class="btn-primary" @click="resetAndClose">Close</button>
               </div>
             </template>
@@ -284,7 +284,7 @@ function resetAndClose() {
                   </svg>
                 </div>
                 <p class="error-text">{{ errorMessage }}</p>
-                <button class="btn-secondary" @click="step = 'idle'">Try again</button>
+                <button class="btn-secondary" @click="step = 'idle'">Let's try that again</button>
               </div>
             </template>
           </div>

@@ -1,14 +1,12 @@
 ---
 // src/pages/onboarding.astro
 import { env } from 'cloudflare:workers'
-import AppLayout from '../layouts/AppLayout.astro'
 
 const { userId } = Astro.locals.auth()
 if (!userId) {
   return Astro.redirect('/sign-in')
 }
 
-// Check if user already has locations
 const { DB } = env
 const locations = await DB.prepare(
   'SELECT location_id FROM user_locations WHERE user_id = ?'
@@ -17,159 +15,591 @@ const locations = await DB.prepare(
 if (locations.results.length > 0) {
   return Astro.redirect('/')
 }
+
+const restaurantTypes = [
+  { id: 'fast_casual', name: 'Fast Casual', icon: '🍔', desc: 'Sling it fast, keep it fresh' },
+  { id: 'fine_dining', name: 'Fine Dining', icon: '🍷', desc: 'White tablecloths & tiny portions' },
+  { id: 'bar_brewery', name: 'Bar & Brewery', icon: '🍺', desc: 'Where everyone knows your pour' },
+  { id: 'cafe', name: 'Café', icon: '☕', desc: 'Caffeine dealers & pastry pushers' },
+  { id: 'food_truck', name: 'Food Truck', icon: '🚚', desc: 'Chasing crowds & dodging tickets' },
+]
 ---
 
-<AppLayout title="Get Started" hideNav={true} hideScanButton={true}>
-  <div class="onboarding-page">
-    <div class="onboarding-card">
-      <div class="logo-mark">R</div>
-      <h1 class="onboarding-title">Welcome to Restoraunch!</h1>
-      <p class="onboarding-subtitle">Let's get your restaurant set up.</p>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Welcome to Restoraunch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="onboarding">
+    <!-- Decorative background -->
+    <div class="bg-pattern"></div>
+    <div class="bg-gradient"></div>
 
-      <form id="create-form" class="onboarding-form">
-        <div class="form-group">
-          <label for="name" class="form-label">
-            Restaurant Name
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            required
-            class="form-input"
-            placeholder="e.g., Joe's Diner"
-          />
+    <main class="onboarding-main">
+      <!-- Left: Branding -->
+      <aside class="brand-panel">
+        <div class="brand-content">
+          <div class="brand-logo">
+            <span class="logo-letter">R</span>
+          </div>
+          <h1 class="brand-title">Restoraunch</h1>
+          <p class="brand-tagline">Track costs.<br/>Reduce waste.<br/>Grow margins.</p>
         </div>
-        <button type="submit" class="submit-btn">
-          Create Restaurant
-        </button>
-      </form>
+        <div class="brand-decorative">
+          <div class="deco-circle deco-1"></div>
+          <div class="deco-circle deco-2"></div>
+          <div class="deco-line"></div>
+        </div>
+      </aside>
 
-      <div class="invite-section">
-        <p class="invite-text">
-          Have an invite code?
-          <a href="#" id="show-invite" class="invite-link">Enter it here</a>
-        </p>
-      </div>
-    </div>
+      <!-- Right: Form -->
+      <section class="form-panel">
+        <div class="form-container">
+          <header class="form-header">
+            <span class="form-step">Step 1 of 1</span>
+            <h2 class="form-title">Let's get cooking</h2>
+            <p class="form-subtitle">Spill the beans — what kind of joint is this?</p>
+          </header>
+
+          <form id="create-form" class="onboarding-form">
+            <!-- Restaurant Name -->
+            <div class="field-group" style="--delay: 0">
+              <label for="name" class="field-label">Restaurant Name</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                required
+                autocomplete="off"
+                class="field-input"
+                placeholder="The Rustic Table"
+              />
+            </div>
+
+            <!-- Restaurant Type Cards -->
+            <div class="field-group" style="--delay: 1">
+              <label class="field-label">What kind of place is it?</label>
+              <div class="type-grid">
+                {restaurantTypes.map((type, i) => (
+                  <label class="type-card" style={`--card-delay: ${i}`}>
+                    <input type="radio" name="type" value={type.id} required />
+                    <span class="type-icon">{type.icon}</span>
+                    <span class="type-name">{type.name}</span>
+                    <span class="type-desc">{type.desc}</span>
+                    <span class="type-check">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="field-group" style="--delay: 2">
+              <button type="submit" class="submit-btn">
+                <span class="btn-text">Launch Your Dashboard</span>
+                <span class="btn-arrow">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </button>
+            </div>
+          </form>
+
+          <footer class="form-footer">
+            <p>Have an invite? <a href="#" class="invite-link">Join an existing restaurant</a></p>
+          </footer>
+        </div>
+      </section>
+    </main>
   </div>
-</AppLayout>
+</body>
+</html>
 
 <style>
-  .onboarding-page {
-    min-height: 100dvh;
+  :root {
+    --color-cream: #FFF8F0;
+    --color-cream-dark: #F5EDE3;
+    --color-espresso: #2A1810;
+    --color-espresso-light: #4A3830;
+    --color-terracotta: #C45D35;
+    --color-terracotta-dark: #A84D2B;
+    --color-sage: #7A8B6E;
+    --color-gold: #D4A853;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--color-cream);
+    color: var(--color-espresso);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .onboarding {
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Background effects */
+  .bg-pattern {
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+  }
+
+  .bg-gradient {
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 0% 0%, rgba(196, 93, 53, 0.08), transparent 50%),
+      radial-gradient(ellipse 60% 80% at 100% 100%, rgba(122, 139, 110, 0.06), transparent 50%);
+    pointer-events: none;
+  }
+
+  .onboarding-main {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (min-width: 900px) {
+    .onboarding-main {
+      grid-template-columns: 380px 1fr;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .onboarding-main {
+      grid-template-columns: 440px 1fr;
+    }
+  }
+
+  /* Brand Panel */
+  .brand-panel {
+    display: none;
+    background: var(--color-espresso);
+    color: var(--color-cream);
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  @media (min-width: 900px) {
+    .brand-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+  }
+
+  .brand-content {
+    position: relative;
+    z-index: 2;
+  }
+
+  .brand-logo {
+    width: 72px;
+    height: 72px;
+    background: var(--color-terracotta);
+    border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1.5rem;
-    background: linear-gradient(180deg, oklch(0.98 0.01 60) 0%, oklch(0.95 0.02 60) 100%);
+    margin-bottom: 2rem;
+    box-shadow:
+      0 8px 32px rgba(196, 93, 53, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    animation: logoEnter 800ms var(--ease-out-expo) both;
   }
 
-  .onboarding-card {
-    background: white;
-    border-radius: 1rem;
-    border: 1px solid oklch(0.92 0.02 60);
-    box-shadow: var(--shadow-lg);
+  @keyframes logoEnter {
+    from {
+      opacity: 0;
+      transform: scale(0.8) rotate(-8deg);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) rotate(0);
+    }
+  }
+
+  .logo-letter {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: var(--color-cream);
+    font-style: italic;
+  }
+
+  .brand-title {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    margin-bottom: 1.5rem;
+    animation: textReveal 600ms var(--ease-out-expo) 100ms both;
+  }
+
+  .brand-tagline {
+    font-size: 1.375rem;
+    line-height: 1.5;
+    color: rgba(255, 248, 240, 0.7);
+    font-weight: 400;
+    animation: textReveal 600ms var(--ease-out-expo) 200ms both;
+  }
+
+  @keyframes textReveal {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Decorative elements */
+  .brand-decorative {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .deco-circle {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 248, 240, 0.08);
+  }
+
+  .deco-1 {
+    width: 300px;
+    height: 300px;
+    bottom: -100px;
+    right: -100px;
+    animation: floatSlow 20s ease-in-out infinite;
+  }
+
+  .deco-2 {
+    width: 200px;
+    height: 200px;
+    top: 10%;
+    right: 20%;
+    animation: floatSlow 15s ease-in-out infinite reverse;
+  }
+
+  .deco-line {
+    position: absolute;
+    bottom: 3rem;
+    left: 3rem;
+    right: 3rem;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255, 248, 240, 0.2), transparent);
+  }
+
+  @keyframes floatSlow {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-10px, 15px); }
+  }
+
+  /* Form Panel */
+  .form-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 2rem;
-    max-width: 28rem;
+    min-height: 100vh;
+  }
+
+  @media (min-width: 600px) {
+    .form-panel {
+      padding: 3rem;
+    }
+  }
+
+  .form-container {
     width: 100%;
-    text-align: center;
-    animation: cardEnter 600ms var(--ease-out-expo) both;
+    max-width: 520px;
   }
 
-  @keyframes cardEnter {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
+  .form-header {
+    margin-bottom: 2.5rem;
+    animation: headerEnter 700ms var(--ease-out-expo) both;
   }
 
-  .logo-mark {
-    width: 3.5rem;
-    height: 3.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, oklch(0.45 0.12 60), oklch(0.55 0.14 60));
-    color: white;
-    font-family: var(--font-display);
-    font-size: 1.75rem;
+  @keyframes headerEnter {
+    from {
+      opacity: 0;
+      transform: translateY(-15px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .form-step {
+    display: inline-block;
+    font-size: 0.75rem;
     font-weight: 600;
-    border-radius: 12px;
-    margin: 0 auto 1.5rem;
-    box-shadow: 0 4px 12px oklch(0.45 0.12 60 / 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-terracotta);
+    background: rgba(196, 93, 53, 0.1);
+    padding: 0.375rem 0.75rem;
+    border-radius: 100px;
+    margin-bottom: 1rem;
   }
 
-  .onboarding-title {
+  .form-title {
     font-family: var(--font-display);
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: oklch(0.20 0.05 60);
-    margin: 0 0 0.5rem;
-    letter-spacing: -0.02em;
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    color: var(--color-espresso);
+    margin-bottom: 0.5rem;
   }
 
-  .onboarding-subtitle {
-    font-size: 0.9375rem;
-    color: oklch(0.50 0.05 60);
-    margin: 0 0 2rem;
+  .form-subtitle {
+    font-size: 1rem;
+    color: var(--color-espresso-light);
+    opacity: 0.7;
   }
 
+  /* Form Styles */
   .onboarding-form {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 2rem;
   }
 
-  .form-group {
-    text-align: left;
+  .field-group {
+    animation: fieldEnter 600ms var(--ease-out-expo) both;
+    animation-delay: calc(var(--delay, 0) * 100ms + 200ms);
   }
 
-  .form-label {
+  @keyframes fieldEnter {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .field-label {
     display: block;
     font-size: 0.875rem;
-    font-weight: 500;
-    color: oklch(0.35 0.05 60);
-    margin-bottom: 0.375rem;
+    font-weight: 600;
+    color: var(--color-espresso);
+    margin-bottom: 0.75rem;
   }
 
-  .form-input {
+  .field-input {
     width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid oklch(0.88 0.02 60);
-    border-radius: 0.625rem;
+    padding: 1rem 1.25rem;
+    font-family: var(--font-body);
     font-size: 1rem;
-    color: oklch(0.20 0.05 60);
-    background: oklch(0.99 0.003 60);
-    transition: all var(--duration-fast) var(--ease-smooth);
+    color: var(--color-espresso);
+    background: white;
+    border: 2px solid var(--color-cream-dark);
+    border-radius: 12px;
+    transition: all 200ms ease;
   }
 
-  .form-input:focus {
+  .field-input::placeholder {
+    color: rgba(42, 24, 16, 0.35);
+  }
+
+  .field-input:hover {
+    border-color: rgba(42, 24, 16, 0.2);
+  }
+
+  .field-input:focus {
     outline: none;
-    border-color: oklch(0.55 0.10 60);
-    box-shadow: 0 0 0 3px oklch(0.55 0.10 60 / 0.15);
+    border-color: var(--color-terracotta);
+    box-shadow: 0 0 0 4px rgba(196, 93, 53, 0.1);
   }
 
-  .form-input::placeholder {
-    color: oklch(0.60 0.03 60);
+  /* Type Selection Cards */
+  .type-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
   }
 
-  .submit-btn {
-    width: 100%;
-    padding: 0.875rem 1.5rem;
-    background: oklch(0.45 0.12 60);
+  @media (min-width: 480px) {
+    .type-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .type-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.25rem 0.75rem;
+    background: white;
+    border: 2px solid var(--color-cream-dark);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 250ms var(--ease-out-expo);
+    animation: cardEnter 500ms var(--ease-out-expo) both;
+    animation-delay: calc(var(--card-delay, 0) * 60ms + 400ms);
+  }
+
+  @keyframes cardEnter {
+    from {
+      opacity: 0;
+      transform: translateY(15px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .type-card input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .type-card:hover {
+    border-color: rgba(42, 24, 16, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(42, 24, 16, 0.08);
+  }
+
+  .type-card:has(input:checked) {
+    border-color: var(--color-terracotta);
+    background: rgba(196, 93, 53, 0.04);
+    box-shadow: 0 4px 20px rgba(196, 93, 53, 0.15);
+  }
+
+  .type-card:has(input:focus-visible) {
+    outline: 2px solid var(--color-terracotta);
+    outline-offset: 2px;
+  }
+
+  .type-icon {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+    transition: transform 300ms var(--ease-spring);
+  }
+
+  .type-card:hover .type-icon {
+    transform: scale(1.15);
+  }
+
+  .type-name {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-espresso);
+    margin-bottom: 0.25rem;
+  }
+
+  .type-desc {
+    font-size: 0.6875rem;
+    color: var(--color-espresso-light);
+    opacity: 0.6;
+    line-height: 1.3;
+  }
+
+  .type-check {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 20px;
+    height: 20px;
+    background: var(--color-terracotta);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 200ms var(--ease-spring);
+  }
+
+  .type-check svg {
+    width: 12px;
+    height: 12px;
     color: white;
-    border: none;
-    border-radius: 0.625rem;
+  }
+
+  .type-card:has(input:checked) .type-check {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* Submit Button */
+  .submit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 1.125rem 2rem;
+    font-family: var(--font-body);
     font-size: 1rem;
     font-weight: 600;
+    color: var(--color-cream);
+    background: var(--color-terracotta);
+    border: none;
+    border-radius: 14px;
     cursor: pointer;
-    box-shadow: 0 2px 8px oklch(0.45 0.12 60 / 0.3);
-    transition: all var(--duration-fast) var(--ease-smooth);
+    position: relative;
+    overflow: hidden;
+    transition: all 250ms var(--ease-out-expo);
+    box-shadow:
+      0 4px 16px rgba(196, 93, 53, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
+  .submit-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+    pointer-events: none;
   }
 
   .submit-btn:hover {
-    background: oklch(0.40 0.14 60);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px oklch(0.45 0.12 60 / 0.4);
+    background: var(--color-terracotta-dark);
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 24px rgba(196, 93, 53, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
 
   .submit-btn:active {
@@ -182,63 +612,103 @@ if (locations.results.length > 0) {
     transform: none;
   }
 
-  .invite-section {
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid oklch(0.92 0.02 60);
+  .btn-arrow {
+    display: flex;
+    transition: transform 300ms var(--ease-out-expo);
   }
 
-  .invite-text {
+  .btn-arrow svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .submit-btn:hover .btn-arrow {
+    transform: translateX(4px);
+  }
+
+  /* Footer */
+  .form-footer {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-cream-dark);
+    text-align: center;
+    animation: footerEnter 500ms var(--ease-out-expo) 700ms both;
+  }
+
+  @keyframes footerEnter {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .form-footer p {
     font-size: 0.875rem;
-    color: oklch(0.50 0.05 60);
-    margin: 0;
+    color: var(--color-espresso-light);
+    opacity: 0.7;
   }
 
   .invite-link {
-    color: oklch(0.45 0.12 60);
+    color: var(--color-terracotta);
     text-decoration: none;
-    font-weight: 500;
+    font-weight: 600;
+    transition: color 150ms ease;
   }
 
   .invite-link:hover {
+    color: var(--color-terracotta-dark);
     text-decoration: underline;
   }
 
+  /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
-    .onboarding-card {
-      animation: none;
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
     }
   }
 </style>
 
 <script>
   const form = document.getElementById('create-form') as HTMLFormElement
+  const submitBtn = form.querySelector('.submit-btn') as HTMLButtonElement
+  const btnText = submitBtn.querySelector('.btn-text') as HTMLSpanElement
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault()
     const name = (document.getElementById('name') as HTMLInputElement).value
-    const btn = form.querySelector('button')!
-    btn.textContent = 'Creating...'
-    btn.disabled = true
+    const typeInput = form.querySelector('input[name="type"]:checked') as HTMLInputElement | null
+
+    if (!typeInput) {
+      return
+    }
+
+    const restaurantType = typeInput.value
+    btnText.textContent = 'Prepping the kitchen...'
+    submitBtn.disabled = true
 
     try {
       const response = await fetch('/api/locations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, restaurantType }),
       })
       const data = await response.json()
 
       if (data.id) {
-        window.location.href = '/'
+        sessionStorage.setItem('restoraunch_sample_mode', restaurantType)
+        btnText.textContent = 'Welcome to the chaos!'
+        setTimeout(() => {
+          window.location.href = '/'
+        }, 400)
       } else {
         alert(data.error || 'Failed to create restaurant')
-        btn.textContent = 'Create Restaurant'
-        btn.disabled = false
+        btnText.textContent = 'Launch Your Dashboard'
+        submitBtn.disabled = false
       }
     } catch {
       alert('Network error')
-      btn.textContent = 'Create Restaurant'
-      btn.disabled = false
+      btnText.textContent = 'Launch Your Dashboard'
+      submitBtn.disabled = false
     }
   })
 </script>

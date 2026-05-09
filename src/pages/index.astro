@@ -25,21 +25,26 @@ if (userId) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="oklch(0.98 0.01 60)" />
-    <title>Restoraunch - Restaurant Inventory Management</title>
+    <meta name="theme-color" content="oklch(0.15 0.03 60)" />
+    <title>Restoraunch — Know Your Numbers, Run Your Kitchen</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <style>
       :root {
         --warm-50: oklch(0.98 0.01 60);
         --warm-100: oklch(0.95 0.02 60);
         --warm-200: oklch(0.90 0.03 60);
+        --warm-300: oklch(0.85 0.05 60);
+        --warm-400: oklch(0.70 0.08 60);
         --warm-500: oklch(0.55 0.10 60);
         --warm-600: oklch(0.45 0.10 60);
         --warm-700: oklch(0.35 0.08 60);
         --warm-800: oklch(0.25 0.05 60);
         --warm-900: oklch(0.15 0.03 60);
+        --success: oklch(0.65 0.15 140);
+        --warning: oklch(0.75 0.15 85);
+        --error: oklch(0.60 0.20 25);
         --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
         --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
       }
@@ -48,22 +53,35 @@ if (userId) {
 
       body {
         font-family: 'DM Sans', system-ui, sans-serif;
-        background: var(--warm-50);
-        color: var(--warm-900);
+        background: var(--warm-900);
+        color: var(--warm-100);
         min-height: 100vh;
-        position: relative;
         overflow-x: hidden;
         -webkit-font-smoothing: antialiased;
       }
 
-      /* Subtle texture overlay */
+      /* Grain texture overlay */
       body::before {
         content: '';
         position: fixed;
         inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        opacity: 0.03;
+        pointer-events: none;
+        z-index: 1000;
+      }
+
+      /* Ambient glow */
+      body::after {
+        content: '';
+        position: fixed;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
         background:
-          radial-gradient(ellipse 80% 50% at 50% -20%, oklch(0.92 0.04 60 / 0.5), transparent),
-          radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.90 0.05 45 / 0.3), transparent);
+          radial-gradient(ellipse 40% 30% at 20% 20%, oklch(0.45 0.10 60 / 0.15), transparent),
+          radial-gradient(ellipse 50% 40% at 80% 80%, oklch(0.65 0.15 140 / 0.08), transparent);
         pointer-events: none;
         z-index: 0;
       }
@@ -71,13 +89,6 @@ if (userId) {
       .landing {
         position: relative;
         z-index: 1;
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 1.5rem;
-      }
-
-      @media (min-width: 768px) {
-        .landing { padding: 2rem 3rem; }
       }
 
       /* Navigation */
@@ -85,28 +96,34 @@ if (userId) {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0.75rem 0;
-        animation: fadeInDown 600ms var(--ease-out-expo) both;
+        padding: 1.25rem 1.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        animation: fadeIn 600ms var(--ease-out-expo) both;
+      }
+
+      @media (min-width: 768px) {
+        .nav { padding: 1.5rem 3rem; }
       }
 
       .logo {
         font-family: 'Crimson Pro', Georgia, serif;
-        font-size: 1.625rem;
+        font-size: 1.75rem;
         font-weight: 600;
-        color: var(--warm-800);
-        letter-spacing: -0.02em;
+        color: var(--warm-100);
+        letter-spacing: -0.03em;
       }
 
       .nav-links {
         display: flex;
-        gap: 0.5rem;
+        gap: 0.75rem;
         align-items: center;
       }
 
       .nav-links a {
-        padding: 0.5rem 1rem;
+        padding: 0.625rem 1.25rem;
         text-decoration: none;
-        color: var(--warm-700);
+        color: var(--warm-300);
         font-weight: 500;
         font-size: 0.9375rem;
         border-radius: 8px;
@@ -114,169 +131,671 @@ if (userId) {
       }
 
       .nav-links a:hover {
-        background: oklch(0.90 0.03 60 / 0.6);
-        color: var(--warm-800);
+        color: var(--warm-100);
       }
 
       .nav-links .cta {
-        background: var(--warm-700);
-        color: white;
-        box-shadow: 0 2px 8px oklch(0.35 0.08 60 / 0.25);
+        background: var(--warm-100);
+        color: var(--warm-900);
+        font-weight: 600;
       }
 
       .nav-links .cta:hover {
-        background: var(--warm-800);
+        background: white;
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px oklch(0.35 0.08 60 / 0.35);
+        box-shadow: 0 4px 20px oklch(0.98 0.01 60 / 0.3);
       }
 
-      .nav-links .cta:active {
-        transform: translateY(0) scale(0.98);
-      }
-
-      /* Hero */
+      /* Hero Section */
       .hero {
-        text-align: center;
-        padding: 5rem 1rem 4rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem 4rem;
+        display: grid;
+        gap: 3rem;
+        align-items: center;
       }
 
-      @media (min-width: 768px) {
-        .hero { padding: 7rem 2rem 5rem; }
+      @media (min-width: 1024px) {
+        .hero {
+          grid-template-columns: 1fr 1.1fr;
+          padding: 4rem 3rem 5rem;
+          gap: 4rem;
+        }
+      }
+
+      .hero-content {
+        animation: fadeInUp 800ms var(--ease-out-expo) 100ms both;
+      }
+
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: oklch(0.65 0.15 140 / 0.15);
+        color: var(--success);
+        padding: 0.5rem 1rem;
+        border-radius: 100px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        border: 1px solid oklch(0.65 0.15 140 / 0.3);
+      }
+
+      .hero-badge::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        background: var(--success);
+        border-radius: 50%;
+        animation: pulse 2s ease infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.2); }
       }
 
       .hero h1 {
         font-family: 'Crimson Pro', Georgia, serif;
-        font-size: clamp(2.25rem, 6vw, 3.5rem);
+        font-size: clamp(2.5rem, 5.5vw, 4rem);
         font-weight: 600;
-        color: var(--warm-800);
-        margin-bottom: 1.25rem;
-        line-height: 1.15;
+        color: var(--warm-50);
+        line-height: 1.1;
         letter-spacing: -0.03em;
-        animation: fadeInUp 700ms var(--ease-out-expo) 100ms both;
+        margin-bottom: 1.5rem;
       }
 
-      .hero p {
-        font-size: 1.125rem;
-        color: var(--warm-600);
-        max-width: 520px;
-        margin: 0 auto 2.5rem;
+      .hero h1 .highlight {
+        color: var(--success);
+        position: relative;
+      }
+
+      .hero-sub {
+        font-size: 1.25rem;
+        color: var(--warm-400);
         line-height: 1.6;
-        animation: fadeInUp 700ms var(--ease-out-expo) 200ms both;
+        margin-bottom: 2.5rem;
+        max-width: 480px;
       }
 
       @media (min-width: 768px) {
-        .hero p { font-size: 1.25rem; }
+        .hero-sub { font-size: 1.375rem; }
       }
 
-      .hero-cta {
+      .hero-ctas {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .btn-primary {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        background: var(--warm-700);
-        color: white;
-        padding: 1rem 2rem;
+        gap: 0.625rem;
+        background: var(--warm-100);
+        color: var(--warm-900);
+        padding: 1rem 1.75rem;
         border-radius: 10px;
         text-decoration: none;
         font-weight: 600;
-        font-size: 1.0625rem;
-        box-shadow: 0 4px 14px oklch(0.35 0.08 60 / 0.3);
+        font-size: 1rem;
         transition: all 200ms var(--ease-spring);
-        animation: fadeInUp 700ms var(--ease-out-expo) 300ms both;
+        box-shadow: 0 4px 20px oklch(0.98 0.01 60 / 0.2);
       }
 
-      .hero-cta:hover {
-        background: var(--warm-800);
+      .btn-primary:hover {
+        background: white;
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px oklch(0.35 0.08 60 / 0.4);
+        box-shadow: 0 8px 30px oklch(0.98 0.01 60 / 0.3);
       }
 
-      .hero-cta:active {
-        transform: translateY(0) scale(0.97);
+      .btn-primary:active {
+        transform: translateY(0) scale(0.98);
       }
 
-      .hero-cta::after {
-        content: '→';
+      .btn-primary svg {
         transition: transform 200ms var(--ease-spring);
       }
 
-      .hero-cta:hover::after {
-        transform: translateX(4px);
+      .btn-primary:hover svg {
+        transform: translateX(3px);
       }
 
-      /* Features */
-      .features {
+      .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--warm-300);
+        padding: 1rem 1.25rem;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 1rem;
+        transition: color 150ms ease;
+      }
+
+      .btn-secondary:hover {
+        color: var(--warm-100);
+      }
+
+      /* Dashboard Preview */
+      .dashboard-preview {
+        position: relative;
+        animation: fadeInUp 800ms var(--ease-out-expo) 300ms both;
+      }
+
+      .dashboard-preview::before {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        background: linear-gradient(135deg, var(--success), var(--warm-500), var(--success));
+        border-radius: 18px;
+        opacity: 0.4;
+        filter: blur(20px);
+        z-index: -1;
+        animation: glowPulse 4s ease-in-out infinite;
+      }
+
+      @keyframes glowPulse {
+        0%, 100% { opacity: 0.3; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.02); }
+      }
+
+      .dashboard-frame {
+        background: var(--warm-800);
+        border-radius: 16px;
+        border: 1px solid oklch(0.35 0.05 60 / 0.5);
+        overflow: hidden;
+        box-shadow:
+          0 4px 6px oklch(0 0 0 / 0.1),
+          0 20px 40px oklch(0 0 0 / 0.2),
+          0 0 0 1px oklch(1 0 0 / 0.05) inset;
+      }
+
+      .dashboard-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.875rem 1rem;
+        background: oklch(0.20 0.03 60);
+        border-bottom: 1px solid oklch(0.30 0.04 60 / 0.5);
+      }
+
+      .dashboard-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--warm-600);
+      }
+
+      .dashboard-dot:nth-child(1) { background: oklch(0.65 0.20 25); }
+      .dashboard-dot:nth-child(2) { background: oklch(0.80 0.15 85); }
+      .dashboard-dot:nth-child(3) { background: oklch(0.70 0.15 140); }
+
+      .dashboard-content {
+        padding: 1.25rem;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.5rem;
-        padding: 2rem 0 4rem;
+        gap: 1rem;
       }
 
-      .feature {
-        background: white;
-        padding: 1.75rem;
-        border-radius: 14px;
-        border: 1px solid var(--warm-100);
-        box-shadow: 0 2px 8px oklch(0.25 0.03 60 / 0.06);
-        transition: all 250ms var(--ease-out-expo);
+      @media (min-width: 640px) {
+        .dashboard-content { padding: 1.5rem; }
       }
 
-      .feature:nth-child(1) { animation: fadeInUp 600ms var(--ease-out-expo) 400ms both; }
-      .feature:nth-child(2) { animation: fadeInUp 600ms var(--ease-out-expo) 500ms both; }
-      .feature:nth-child(3) { animation: fadeInUp 600ms var(--ease-out-expo) 600ms both; }
-
-      .feature:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 24px oklch(0.25 0.03 60 / 0.12);
-        border-color: var(--warm-200);
+      /* Metric Cards */
+      .metrics-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
       }
 
-      .feature-icon {
-        width: 2.5rem;
-        height: 2.5rem;
-        background: var(--warm-100);
+      @media (min-width: 640px) {
+        .metrics-row { grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+      }
+
+      .metric-card {
+        background: oklch(0.22 0.03 60);
         border-radius: 10px;
+        padding: 1rem;
+        border: 1px solid oklch(0.30 0.04 60 / 0.3);
+      }
+
+      .metric-label {
+        font-size: 0.6875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--warm-400);
+        margin-bottom: 0.375rem;
+      }
+
+      .metric-value {
+        font-family: 'DM Mono', monospace;
+        font-size: 1.375rem;
+        font-weight: 500;
+        color: var(--warm-100);
+      }
+
+      @media (min-width: 640px) {
+        .metric-value { font-size: 1.625rem; }
+      }
+
+      .metric-value.counting {
+        animation: countReveal 2s var(--ease-out-expo) forwards;
+      }
+
+      @keyframes countReveal {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .metric-change {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-top: 0.375rem;
+      }
+
+      .metric-change.up { color: var(--success); }
+      .metric-change.down { color: var(--error); }
+
+      /* Chart Section */
+      .chart-section {
+        display: grid;
+        gap: 1rem;
+      }
+
+      @media (min-width: 640px) {
+        .chart-section { grid-template-columns: 1.5fr 1fr; }
+      }
+
+      .chart-card {
+        background: oklch(0.22 0.03 60);
+        border-radius: 10px;
+        padding: 1rem;
+        border: 1px solid oklch(0.30 0.04 60 / 0.3);
+      }
+
+      .chart-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--warm-300);
+        margin-bottom: 1rem;
+      }
+
+      /* Animated Bar Chart */
+      .bar-chart {
+        display: flex;
+        align-items: flex-end;
+        gap: 0.375rem;
+        height: 80px;
+      }
+
+      .bar {
+        flex: 1;
+        background: linear-gradient(to top, var(--warm-600), var(--warm-500));
+        border-radius: 3px 3px 0 0;
+        animation: barGrow 1.5s var(--ease-out-expo) forwards;
+        transform-origin: bottom;
+      }
+
+      .bar:nth-child(1) { animation-delay: 0.5s; --bar-height: 45%; }
+      .bar:nth-child(2) { animation-delay: 0.6s; --bar-height: 65%; }
+      .bar:nth-child(3) { animation-delay: 0.7s; --bar-height: 55%; }
+      .bar:nth-child(4) { animation-delay: 0.8s; --bar-height: 80%; }
+      .bar:nth-child(5) { animation-delay: 0.9s; --bar-height: 70%; }
+      .bar:nth-child(6) { animation-delay: 1.0s; --bar-height: 90%; }
+      .bar:nth-child(7) { animation-delay: 1.1s; --bar-height: 75%; background: linear-gradient(to top, var(--success), oklch(0.70 0.12 140)); }
+
+      @keyframes barGrow {
+        from { height: 0; opacity: 0; }
+        to { height: var(--bar-height); opacity: 1; }
+      }
+
+      /* Alert Card */
+      .alert-card {
+        background: oklch(0.60 0.20 25 / 0.1);
+        border: 1px solid oklch(0.60 0.20 25 / 0.3);
+      }
+
+      .alert-item {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.625rem 0;
+        border-bottom: 1px solid oklch(0.30 0.04 60 / 0.2);
+        animation: slideIn 0.6s var(--ease-out-expo) forwards;
+        opacity: 0;
+      }
+
+      .alert-item:last-child { border-bottom: none; }
+      .alert-item:nth-child(1) { animation-delay: 1.2s; }
+      .alert-item:nth-child(2) { animation-delay: 1.4s; }
+      .alert-item:nth-child(3) { animation-delay: 1.6s; }
+
+      @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
+      }
+
+      .alert-icon {
+        width: 24px;
+        height: 24px;
+        background: oklch(0.75 0.15 85 / 0.2);
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 1rem;
-        font-size: 1.25rem;
+        font-size: 0.75rem;
+        flex-shrink: 0;
       }
 
-      .feature h3 {
-        font-family: 'DM Sans', system-ui, sans-serif;
+      .alert-text {
+        font-size: 0.8125rem;
+        color: var(--warm-200);
+      }
+
+      .alert-text strong {
+        color: var(--warning);
+        font-weight: 600;
+      }
+
+      /* Floating elements - hidden on mobile, shown on tablet+ */
+      .float-card {
+        display: none;
+        position: absolute;
+        z-index: 10;
+        background: linear-gradient(135deg, oklch(0.22 0.03 60), oklch(0.18 0.02 60));
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        border: 1px solid oklch(0.40 0.06 60 / 0.5);
+        box-shadow:
+          0 10px 30px oklch(0 0 0 / 0.4),
+          0 0 0 1px oklch(1 0 0 / 0.05) inset;
+        animation: floatIn 1s var(--ease-spring) forwards, floatHover 3s ease-in-out infinite;
+        animation-delay: 1.8s, 2.8s;
+        opacity: 0;
+      }
+
+      @keyframes floatHover {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-4px); }
+      }
+
+      @media (min-width: 768px) {
+        .float-card { display: block; }
+      }
+
+      .float-card.savings {
+        top: -30px;
+        right: -15px;
+      }
+
+      @media (min-width: 1024px) {
+        .float-card.savings { right: -50px; top: -20px; }
+      }
+
+      .float-card.margin {
+        bottom: 80px;
+        left: -15px;
+        animation-delay: 2s, 3s;
+      }
+
+      @media (min-width: 1024px) {
+        .float-card.margin { left: -60px; bottom: 100px; }
+      }
+
+      @keyframes floatIn {
+        from { opacity: 0; transform: translateY(20px) scale(0.9); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      .float-label {
+        font-size: 0.6875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--warm-400);
+        margin-bottom: 0.25rem;
+      }
+
+      .float-value {
+        font-family: 'DM Mono', monospace;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--success);
+      }
+
+      /* Scroll Indicator */
+      .scroll-indicator {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        padding-top: 3rem;
+        color: var(--warm-400);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        animation: fadeIn 1s var(--ease-out-expo) 2s both;
+      }
+
+      .scroll-indicator svg {
+        animation: bounce 2s ease-in-out infinite;
+      }
+
+      @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(6px); }
+      }
+
+      /* Stats Bar */
+      .stats-bar {
+        background: var(--warm-800);
+        border-top: 1px solid oklch(0.30 0.04 60 / 0.5);
+        padding: 2rem 1.5rem;
+      }
+
+      .stats-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        text-align: center;
+      }
+
+      @media (min-width: 640px) {
+        .stats-container { grid-template-columns: repeat(4, 1fr); }
+      }
+
+      .stat-item {
+        animation: fadeInUp 600ms var(--ease-out-expo) both;
+      }
+
+      .stat-item:nth-child(1) { animation-delay: 0.1s; }
+      .stat-item:nth-child(2) { animation-delay: 0.2s; }
+      .stat-item:nth-child(3) { animation-delay: 0.3s; }
+      .stat-item:nth-child(4) { animation-delay: 0.4s; }
+
+      .stat-number {
+        font-family: 'DM Mono', monospace;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--warm-100);
+        margin-bottom: 0.25rem;
+      }
+
+      @media (min-width: 640px) {
+        .stat-number { font-size: 1.75rem; }
+      }
+
+      .stat-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--warm-400);
+      }
+
+      /* Value Props Section */
+      .value-section {
+        background: var(--warm-50);
+        color: var(--warm-900);
+        padding: 5rem 1.5rem;
+        position: relative;
+      }
+
+      .value-section::before {
+        content: '';
+        position: absolute;
+        top: -60px;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: linear-gradient(to bottom, var(--warm-800), var(--warm-50));
+      }
+
+      @media (min-width: 768px) {
+        .value-section { padding: 7rem 3rem; }
+      }
+
+      .value-container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .value-header {
+        text-align: center;
+        margin-bottom: 4rem;
+      }
+
+      .value-header h2 {
+        font-family: 'Crimson Pro', Georgia, serif;
+        font-size: clamp(2rem, 4vw, 2.75rem);
         font-weight: 600;
         color: var(--warm-800);
-        margin-bottom: 0.5rem;
-        font-size: 1.0625rem;
+        letter-spacing: -0.02em;
+        margin-bottom: 1rem;
       }
 
-      .feature p {
+      .value-header p {
+        font-size: 1.125rem;
+        color: var(--warm-500);
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .value-grid {
+        display: grid;
+        gap: 2rem;
+      }
+
+      @media (min-width: 768px) {
+        .value-grid { grid-template-columns: repeat(3, 1fr); gap: 2.5rem; }
+      }
+
+      .value-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 16px;
+        border: 1px solid var(--warm-200);
+        transition: all 300ms var(--ease-out-expo);
+      }
+
+      .value-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px oklch(0.25 0.03 60 / 0.12);
+        border-color: var(--warm-300);
+      }
+
+      .value-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--warm-100);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.25rem;
         color: var(--warm-600);
+        transition: all 200ms var(--ease-spring);
+      }
+
+      .value-card:hover .value-icon {
+        background: var(--warm-200);
+        color: var(--warm-700);
+        transform: scale(1.05);
+      }
+
+      .value-card h3 {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        font-weight: 700;
+        font-size: 1.125rem;
+        color: var(--warm-800);
+        margin-bottom: 0.625rem;
+      }
+
+      .value-card p {
+        color: var(--warm-500);
         font-size: 0.9375rem;
-        line-height: 1.55;
+        line-height: 1.6;
+      }
+
+      /* Final CTA Section */
+      .cta-section {
+        background: var(--warm-800);
+        color: var(--warm-100);
+        padding: 5rem 1.5rem;
+        text-align: center;
+      }
+
+      @media (min-width: 768px) {
+        .cta-section { padding: 6rem 3rem; }
+      }
+
+      .cta-container {
+        max-width: 700px;
+        margin: 0 auto;
+      }
+
+      .cta-section h2 {
+        font-family: 'Crimson Pro', Georgia, serif;
+        font-size: clamp(2rem, 4vw, 2.75rem);
+        font-weight: 600;
+        color: var(--warm-50);
+        letter-spacing: -0.02em;
+        margin-bottom: 1rem;
+      }
+
+      .cta-section p {
+        font-size: 1.125rem;
+        color: var(--warm-400);
+        margin-bottom: 2.5rem;
+      }
+
+      .cta-section .btn-primary {
+        font-size: 1.125rem;
+        padding: 1.125rem 2rem;
+      }
+
+      /* Footer */
+      .footer {
+        background: var(--warm-900);
+        color: var(--warm-500);
+        padding: 2rem 1.5rem;
+        text-align: center;
+        font-size: 0.875rem;
       }
 
       /* Animations */
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(16px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
       }
 
-      @keyframes fadeInDown {
-        from {
-          opacity: 0;
-          transform: translateY(-12px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -296,29 +815,202 @@ if (userId) {
           <a href="/sign-up" class="cta">Get Started</a>
         </div>
       </nav>
+
       <section class="hero">
-        <h1>Restaurant Inventory,<br/>Simplified</h1>
-        <p>Track ingredients, monitor costs, reduce waste. Built for restaurants that want to run smarter.</p>
-        <a href="/sign-up" class="hero-cta">Start Free</a>
+        <div class="hero-content">
+          <div class="hero-badge">Now in beta — free for early adopters</div>
+          <h1>Stop guessing.<br/>Start <span class="highlight">knowing</span>.</h1>
+          <p class="hero-sub">Your food costs are eating your margins. Restoraunch shows you exactly where the money goes — and who's being generous with the portions.</p>
+          <div class="hero-ctas">
+            <a href="/sign-up" class="btn-primary">
+              Get Your Dashboard
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M3 8h10M9 4l4 4-4 4"/>
+              </svg>
+            </a>
+            <a href="#how-it-works" class="btn-secondary">See how it works</a>
+          </div>
+        </div>
+
+        <div class="dashboard-preview">
+          <div class="float-card savings">
+            <div class="float-label">Monthly Savings</div>
+            <div class="float-value">+$2,340</div>
+          </div>
+          <div class="float-card margin">
+            <div class="float-label">Margin Today</div>
+            <div class="float-value">32.4%</div>
+          </div>
+
+          <div class="dashboard-frame">
+            <div class="dashboard-header">
+              <span class="dashboard-dot"></span>
+              <span class="dashboard-dot"></span>
+              <span class="dashboard-dot"></span>
+            </div>
+            <div class="dashboard-content">
+              <div class="metrics-row">
+                <div class="metric-card">
+                  <div class="metric-label">Today's Haul</div>
+                  <div class="metric-value counting" data-target="4847">$4,847</div>
+                  <div class="metric-change up">↑ 12%</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Food Cost</div>
+                  <div class="metric-value counting">$1,456</div>
+                  <div class="metric-change down">↓ 8%</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Actual Margin</div>
+                  <div class="metric-value counting">32.4%</div>
+                  <div class="metric-change up">↑ 3.2%</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Waste Caught</div>
+                  <div class="metric-value counting">$234</div>
+                </div>
+              </div>
+
+              <div class="chart-section">
+                <div class="chart-card">
+                  <div class="chart-title">Weekly Sales vs Cost</div>
+                  <div class="bar-chart">
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                  </div>
+                </div>
+                <div class="chart-card alert-card">
+                  <div class="chart-title">Fishy Business</div>
+                  <div class="alert-item">
+                    <span class="alert-icon">⚠️</span>
+                    <span class="alert-text"><strong>Ribeye</strong> — variance looks sus</span>
+                  </div>
+                  <div class="alert-item">
+                    <span class="alert-icon">📦</span>
+                    <span class="alert-text"><strong>Avocados</strong> — running on fumes</span>
+                  </div>
+                  <div class="alert-item">
+                    <span class="alert-icon">👀</span>
+                    <span class="alert-text"><strong>Olive Oil</strong> — heavy handed?</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scroll-indicator">
+          <span>See how it works</span>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10 4v12M5 11l5 5 5-5"/>
+          </svg>
+        </div>
       </section>
-      <section class="features">
-        <div class="feature">
-          <div class="feature-icon">📦</div>
-          <h3>Inventory Tracking</h3>
-          <p>Scan barcodes, count stock, and know exactly what you have on hand.</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">📊</div>
-          <h3>Cost Analysis</h3>
-          <p>See your actual food costs and identify where money is going.</p>
-        </div>
-        <div class="feature">
-          <div class="feature-icon">👥</div>
-          <h3>Team Access</h3>
-          <p>Invite managers to help track inventory across locations.</p>
+
+      <section class="stats-bar">
+        <div class="stats-container">
+          <div class="stat-item">
+            <div class="stat-number">200+</div>
+            <div class="stat-label">Restaurants</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">$2.4M</div>
+            <div class="stat-label">Waste Caught</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">18%</div>
+            <div class="stat-label">Avg. Margin Lift</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">4.9★</div>
+            <div class="stat-label">User Rating</div>
+          </div>
         </div>
       </section>
+
+      <section class="value-section" id="how-it-works">
+        <div class="value-container">
+          <div class="value-header">
+            <h2>Built by people who've closed the books at midnight</h2>
+            <p>We've counted the walk-in at 2am. We know where the money disappears. Restoraunch catches what spreadsheets miss.</p>
+          </div>
+
+          <div class="value-grid">
+            <div class="value-card">
+              <div class="value-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <path d="M21 15l-5-5L5 21"/>
+                </svg>
+              </div>
+              <h3>Snap your invoices</h3>
+              <p>Take a photo of any receipt or invoice. AI extracts items, prices, and quantities. No more manual data entry at the end of a long shift.</p>
+            </div>
+            <div class="value-card">
+              <div class="value-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+              <h3>Spot the sticky fingers</h3>
+              <p>Variance detection that actually works. See exactly where food is walking out the door — or being "generously" portioned by your line cooks.</p>
+            </div>
+            <div class="value-card">
+              <div class="value-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20V10"/>
+                  <path d="M18 20V4"/>
+                  <path d="M6 20v-4"/>
+                  <circle cx="12" cy="7" r="2"/>
+                  <circle cx="18" cy="4" r="1"/>
+                </svg>
+              </div>
+              <h3>Know your real margins</h3>
+              <p>Not the theoretical ones from your recipe cards. The actual, brutal truth of what you're making after waste, theft, and over-portioning.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-section">
+        <div class="cta-container">
+          <h2>Ready to see where the money goes?</h2>
+          <p>Free during beta. No credit card required. Set up in 5 minutes — or the first round's on us.</p>
+          <a href="/sign-up" class="btn-primary">
+            Start Free — Let's Cook
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M3 8h10M9 4l4 4-4 4"/>
+            </svg>
+          </a>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p>&copy; 2026 Restoraunch. Made for kitchens that don't accept excuses.</p>
+      </footer>
     </div>
+
+    <script>
+      // Animate numbers counting up when they come into view
+      const observerOptions = { threshold: 0.5 };
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('counting');
+          }
+        });
+      }, observerOptions);
+
+      document.querySelectorAll('.metric-value').forEach(el => observer.observe(el));
+    </script>
   </body>
 </html>
 ) : (
