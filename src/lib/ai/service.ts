@@ -1,4 +1,4 @@
-import { RECEIPT_PARSE_PROMPT, POS_PARSE_PROMPT, ITEM_MATCH_PROMPT } from "./prompts";
+import { RECEIPT_PARSE_PROMPT, POS_PARSE_PROMPT, ITEM_MATCH_PROMPT, MULTI_PHOTO_RECEIPT_PROMPT } from "./prompts";
 
 // Interfaces
 export interface ParsedReceiptItem {
@@ -14,6 +14,11 @@ export interface ParsedReceipt {
   date: string;
   total: number;
   items: ParsedReceiptItem[];
+}
+
+export interface MultiPhotoReceipt extends ParsedReceipt {
+  isPartial: boolean;
+  photoCount: number;
 }
 
 export interface ParsedSalesItem {
@@ -42,6 +47,7 @@ export interface InventoryItemForMatch {
 
 export interface AIService {
   parseReceipt(imageDataUrl: string): Promise<ParsedReceipt>;
+  parseMultiPhotoReceipt(imageUrls: string[]): Promise<MultiPhotoReceipt>;
   parsePOSScreen(imageDataUrl: string): Promise<ParsedSales>;
   matchInventoryItem(
     receiptItem: { name: string; unit: string },
@@ -56,7 +62,7 @@ interface AIServiceConfig {
 }
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL = "x-ai/grok-4.3";
+const DEFAULT_MODEL = "google/gemini-3.1-flash-lite-preview";
 
 // JSON Schemas for structured outputs (OpenRouter enforces these)
 const RECEIPT_SCHEMA = {
@@ -139,6 +145,37 @@ const ITEM_MATCH_SCHEMA = {
   },
 };
 
+const MULTI_PHOTO_RECEIPT_SCHEMA = {
+  name: "multi_photo_parsed_receipt",
+  strict: true,
+  schema: {
+    type: "object",
+    properties: {
+      vendor: { type: "string", description: "Supplier/vendor name" },
+      date: { type: ["string", "null"], description: "Receipt date in YYYY-MM-DD format" },
+      total: { type: ["number", "null"], description: "Total amount, null if not visible" },
+      items: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            quantity: { type: "number" },
+            unit: { type: "string" },
+            unitPrice: { type: "number" },
+            totalPrice: { type: "number" },
+          },
+          required: ["name", "quantity", "unit", "unitPrice", "totalPrice"],
+          additionalProperties: false,
+        },
+      },
+      isPartial: { type: "boolean", description: "True if receipt appears incomplete (no total)" },
+    },
+    required: ["vendor", "date", "total", "items", "isPartial"],
+    additionalProperties: false,
+  },
+};
+
 // Sanitize user-provided text to prevent prompt injection
 function sanitizeForPrompt(obj: unknown): string {
   const json = JSON.stringify(obj, null, 2);
@@ -204,6 +241,32 @@ function validateItemMatch(data: unknown): ItemMatch {
   };
 }
 
+function validateMultiPhotoReceipt(data: unknown, photoCount: number): MultiPhotoReceipt {
+  if (typeof data !== 'object' || data === null) {
+    throw new Error('Invalid response: not an object');
+  }
+  const obj = data as Record<string, unknown>;
+  const items = Array.isArray(obj.items) ? obj.items : [];
+  const total = typeof obj.total === 'number' ? obj.total : 0;
+  return {
+    vendor: typeof obj.vendor === 'string' ? obj.vendor : 'Unknown',
+    date: typeof obj.date === 'string' ? obj.date : new Date().toISOString().slice(0, 10),
+    total,
+    items: items.map((item: unknown) => {
+      const i = item as Record<string, unknown>;
+      return {
+        name: typeof i.name === 'string' ? i.name : 'Unknown item',
+        quantity: typeof i.quantity === 'number' ? i.quantity : 1,
+        unit: typeof i.unit === 'string' ? i.unit : 'each',
+        unitPrice: typeof i.unitPrice === 'number' ? i.unitPrice : 0,
+        totalPrice: typeof i.totalPrice === 'number' ? i.totalPrice : 0,
+      };
+    }),
+    isPartial: typeof obj.isPartial === 'boolean' ? obj.isPartial : total === 0,
+    photoCount,
+  };
+}
+
 export function createAIService(config: AIServiceConfig): AIService {
   const { apiKey, fetchFn = fetch, model = DEFAULT_MODEL } = config;
 
@@ -263,6 +326,35 @@ export function createAIService(config: AIServiceConfig): AIService {
 
       const result = await callAPI<unknown>(messages, RECEIPT_SCHEMA);
       return validateReceipt(result);
+    },
+
+    async parseMultiPhotoReceipt(imageUrls: string[]): Promise<MultiPhotoReceipt> {
+      if (imageUrls.length === 0) {
+        throw new Error('No images provided');
+      }
+
+      // For single image, use parseReceipt and convert to MultiPhotoReceipt
+      if (imageUrls.length === 1) {
+        const result = await this.parseReceipt(imageUrls[0]);
+        return {
+          ...result,
+          isPartial: result.total === 0,
+          photoCount: 1,
+        };
+      }
+
+      // Build content array with prompt + all images
+      const content: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
+        { type: "text", text: MULTI_PHOTO_RECEIPT_PROMPT },
+        ...imageUrls.map(url => ({
+          type: "image_url",
+          image_url: { url },
+        })),
+      ];
+
+      const messages = [{ role: "user", content }];
+      const result = await callAPI<unknown>(messages, MULTI_PHOTO_RECEIPT_SCHEMA);
+      return validateMultiPhotoReceipt(result, imageUrls.length);
     },
 
     async parsePOSScreen(imageDataUrl: string): Promise<ParsedSales> {
