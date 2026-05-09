@@ -121,6 +121,7 @@ describe('POST /api/receipts/scan', () => {
 
     const mockAI = {
       parseReceipt: vi.fn().mockResolvedValue(parsedReceipt),
+      parseMultiPhotoReceipt: vi.fn().mockResolvedValue({ ...parsedReceipt, isPartial: false, photoCount: 1 }),
       matchInventoryItem: vi.fn().mockResolvedValue(mockMatch),
       parsePOSScreen: vi.fn(),
     };
@@ -141,7 +142,7 @@ describe('POST /api/receipts/scan', () => {
     expect(body.items[0].matchedInventoryItemId).toBe(1);
     expect(body.items[0].matchConfidence).toBe(0.95);
     expect(body.photoUrl).toContain('receipts/');
-    expect(mockAI.parseReceipt).toHaveBeenCalledTimes(1);
+    expect(mockAI.parseMultiPhotoReceipt).toHaveBeenCalledTimes(1);
     expect(mockAI.matchInventoryItem).toHaveBeenCalledTimes(2);
   });
 
@@ -202,6 +203,7 @@ describe('POST /api/receipts/scan', () => {
 
     const mockAI = {
       parseReceipt: vi.fn().mockRejectedValue(new Error('AI service unavailable')),
+      parseMultiPhotoReceipt: vi.fn().mockRejectedValue(new Error('AI service unavailable')),
       matchInventoryItem: vi.fn(),
       parsePOSScreen: vi.fn(),
     };
@@ -213,6 +215,52 @@ describe('POST /api/receipts/scan', () => {
     const ctx = createScanContext({ formData, db });
 
     await expect(scanPOST(ctx)).rejects.toThrow('AI service unavailable');
+  });
+
+  it('handles multiple images via images[] field', async () => {
+    const { db } = createMockDb();
+    const mockImagesBucket = { put: vi.fn().mockResolvedValue(undefined) };
+    setMockEnv({ db, bucket: mockImagesBucket as any });
+
+    const dbStatement = (db as any).prepare();
+    dbStatement.all.mockResolvedValue({
+      results: [
+        { id: 1, name: 'Chicken Breast', unit: 'lb' },
+      ],
+    });
+
+    const multiPhotoResult = {
+      ...parsedReceipt,
+      items: [parsedReceipt.items[0]], // Deduplicated to 1 item
+      isPartial: false,
+      photoCount: 2,
+    };
+
+    const mockAI = {
+      parseReceipt: vi.fn(),
+      parseMultiPhotoReceipt: vi.fn().mockResolvedValue(multiPhotoResult),
+      matchInventoryItem: vi.fn().mockResolvedValue(mockMatch),
+      parsePOSScreen: vi.fn(),
+    };
+    mockCreateAIService.mockReturnValue(mockAI);
+
+    const formData = new FormData();
+    formData.append('images', new File(['fake image 1'], 'receipt1.jpg', { type: 'image/jpeg' }));
+    formData.append('images', new File(['fake image 2'], 'receipt2.jpg', { type: 'image/jpeg' }));
+
+    const ctx = createScanContext({ formData, db });
+    const response = await scanPOST(ctx);
+    const body = await parseJson(response);
+
+    expect(response.status).toBe(200);
+    expect(body.photoUrls).toHaveLength(2);
+    expect(body.mergeInfo.photosProcessed).toBe(2);
+    expect(mockAI.parseMultiPhotoReceipt).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.stringContaining('receipts/'),
+        expect.stringContaining('receipts/'),
+      ])
+    );
   });
 });
 

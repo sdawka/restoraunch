@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 
-type ScannerState = 'ready' | 'scanning' | 'reviewing' | 'confirming' | 'confirmed' | 'error';
+type ScannerState = 'ready' | 'scanning' | 'reviewing' | 'confirming' | 'confirmed' | 'error' | 'incomplete';
 
 interface ParsedItem {
   name: string;
@@ -16,10 +16,22 @@ interface ParsedItem {
 
 interface ScanResult {
   photoUrl: string;
+  photoUrls: string[];
   supplier: string;
   items: ParsedItem[];
   total: number;
   date: string;
+  isPartial: boolean;
+  mergeInfo?: {
+    photosProcessed: number;
+    itemsBeforeDedup: number;
+    duplicatesRemoved: number;
+  };
+}
+
+interface CapturedImage {
+  file: File;
+  preview: string;
 }
 
 const props = defineProps<{
@@ -36,6 +48,10 @@ const canvasRef = ref<HTMLCanvasElement | null>(null);
 const stream = ref<MediaStream | null>(null);
 const isMobile = ref(typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
 const cameraActive = ref(false);
+
+// Multi-photo state
+const capturedImages = ref<CapturedImage[]>([]);
+const accumulatedItems = ref<ParsedItem[]>([]);
 
 const reviewItems = computed(() => {
   if (!scanResult.value) return [];
@@ -135,12 +151,35 @@ async function capturePhoto() {
   }, 'image/jpeg', 0.9);
 }
 
+function addCapturedImage(file: File) {
+  const preview = URL.createObjectURL(file);
+  capturedImages.value = [...capturedImages.value, { file, preview }];
+}
+
+function removeCapturedImage(index: number) {
+  const removed = capturedImages.value[index];
+  if (removed) {
+    URL.revokeObjectURL(removed.preview);
+  }
+  capturedImages.value = capturedImages.value.filter((_, i) => i !== index);
+}
+
 async function uploadImage(file: File) {
+  // Add to captured images
+  addCapturedImage(file);
+  await scanAllImages();
+}
+
+async function scanAllImages() {
+  if (capturedImages.value.length === 0) return;
+
   state.value = 'scanning';
   error.value = null;
 
   const formData = new FormData();
-  formData.append('image', file);
+  capturedImages.value.forEach(img => {
+    formData.append('images', img.file);
+  });
 
   try {
     const response = await fetch('/api/receipts/scan', {
@@ -156,19 +195,22 @@ async function uploadImage(file: File) {
     const data = await response.json();
     scanResult.value = {
       photoUrl: data.photoUrl,
+      photoUrls: data.photoUrls || [data.photoUrl],
       supplier: data.supplier || 'Unknown Supplier',
       items: data.items.map((item: any) => ({
         name: item.name,
         quantity: item.quantity,
         unit: item.unit,
-        unitCost: item.unitCost || item.unit_cost || 0,
+        unitCost: item.unitCost || item.unitPrice || 0,
         matchedInventoryItemId: item.matchedInventoryItemId,
         matchConfidence: item.matchConfidence || 0,
         matchReason: item.matchReason || '',
         isNewItem: item.matchedInventoryItemId === null
       })),
       total: data.total || 0,
-      date: data.date || new Date().toISOString().split('T')[0]
+      date: data.date || new Date().toISOString().split('T')[0],
+      isPartial: data.isPartial || false,
+      mergeInfo: data.mergeInfo
     };
 
     // Auto-select high-confidence matches
@@ -180,11 +222,26 @@ async function uploadImage(file: File) {
     });
     selectedItems.value = new Set(selectedItems.value);
 
-    state.value = 'reviewing';
+    // If partial receipt detected, prompt for more photos
+    if (scanResult.value.isPartial) {
+      state.value = 'incomplete';
+    } else {
+      state.value = 'reviewing';
+    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to scan receipt';
     state.value = 'error';
   }
+}
+
+function addMorePhotos() {
+  // Keep accumulated data, go back to ready state for more captures
+  state.value = 'ready';
+}
+
+function continueWithPartial() {
+  // Proceed to review with what we have
+  state.value = 'reviewing';
 }
 
 async function confirmReceipt() {
@@ -243,6 +300,10 @@ function resetScanner() {
   error.value = null;
   scanResult.value = null;
   selectedItems.value.clear();
+  // Clean up captured image previews
+  capturedImages.value.forEach(img => URL.revokeObjectURL(img.preview));
+  capturedImages.value = [];
+  accumulatedItems.value = [];
   stopCamera();
 }
 
@@ -301,6 +362,25 @@ function formatCurrency(value: number): string {
 
     <!-- Ready State -->
     <div v-if="state === 'ready'" class="ready-state">
+      <!-- Show captured images if any -->
+      <div v-if="capturedImages.length > 0" class="captured-images">
+        <div class="captured-header">
+          <span class="captured-count">{{ capturedImages.length }} photo{{ capturedImages.length > 1 ? 's' : '' }} captured</span>
+        </div>
+        <div class="thumbnail-strip">
+          <div v-for="(img, index) in capturedImages" :key="index" class="thumbnail-item">
+            <img :src="img.preview" :alt="`Photo ${index + 1}`" class="thumbnail-img" />
+            <span class="thumbnail-number">{{ index + 1 }}</span>
+            <button class="thumbnail-remove" @click.stop="removeCapturedImage(index)">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="upload-zone" @click="triggerFileUpload">
         <div class="upload-icon-container">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="upload-icon">
@@ -309,7 +389,7 @@ function formatCurrency(value: number): string {
             <line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
         </div>
-        <p class="upload-text">Drop receipt image here</p>
+        <p class="upload-text">{{ capturedImages.length > 0 ? 'Add another photo' : 'Drop receipt image here' }}</p>
         <p class="upload-subtext">or click to browse</p>
       </div>
 
@@ -337,7 +417,7 @@ function formatCurrency(value: number): string {
             <line x1="12" y1="18" x2="12" y2="12"/>
             <line x1="9" y1="15" x2="15" y2="15"/>
           </svg>
-          <span>Upload</span>
+          <span>{{ capturedImages.length > 0 ? 'Add Photo' : 'Upload' }}</span>
         </button>
       </div>
     </div>
@@ -384,6 +464,43 @@ function formatCurrency(value: number): string {
       <button class="retry-btn" @click="resetScanner">Try Again</button>
     </div>
 
+    <!-- Incomplete Receipt State -->
+    <div v-if="state === 'incomplete'" class="incomplete-state">
+      <div class="incomplete-icon-container">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="incomplete-icon">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="12" y1="18" x2="12" y2="12"/>
+          <line x1="9" y1="15" x2="15" y2="15"/>
+        </svg>
+      </div>
+      <p class="incomplete-title">Partial Receipt Detected</p>
+      <p class="incomplete-text">No total found. Is this a long receipt that needs more photos?</p>
+
+      <div class="incomplete-stats">
+        <span class="stat-item">{{ capturedImages.length }} photo{{ capturedImages.length > 1 ? 's' : '' }}</span>
+        <span class="stat-divider">·</span>
+        <span class="stat-item">{{ scanResult?.items.length || 0 }} items found</span>
+      </div>
+
+      <div class="incomplete-actions">
+        <button class="action-btn add-more-btn" @click="addMorePhotos">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="12" y1="8" x2="12" y2="16"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+          <span>Add More Photos</span>
+        </button>
+        <button class="action-btn continue-btn" @click="continueWithPartial">
+          <span>Continue Anyway</span>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
     <!-- Review State -->
     <div v-if="state === 'reviewing' || state === 'confirming'" class="review-state">
       <!-- Receipt Preview -->
@@ -391,6 +508,14 @@ function formatCurrency(value: number): string {
         <div class="receipt-meta">
           <span class="supplier-name">{{ scanResult?.supplier }}</span>
           <span class="receipt-date">{{ scanResult?.date }}</span>
+        </div>
+        <div v-if="scanResult?.mergeInfo && scanResult.mergeInfo.photosProcessed > 1" class="merge-info">
+          <span class="merge-badge">
+            {{ scanResult.mergeInfo.photosProcessed }} photos merged
+          </span>
+          <span v-if="scanResult.mergeInfo.duplicatesRemoved > 0" class="dedup-badge">
+            {{ scanResult.mergeInfo.duplicatesRemoved }} duplicates removed
+          </span>
         </div>
       </div>
 
@@ -608,6 +733,91 @@ function formatCurrency(value: number): string {
 
 .state-line.active {
   background: oklch(0.6 0.15 140);
+}
+
+/* Captured Images */
+.captured-images {
+  margin-bottom: 16px;
+}
+
+.captured-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.captured-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: oklch(0.45 0.08 230);
+}
+
+.thumbnail-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+
+.thumbnail-item {
+  position: relative;
+  flex-shrink: 0;
+  width: 64px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid oklch(0.88 0.02 60);
+  background: oklch(0.97 0.01 60);
+}
+
+.thumbnail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail-number {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  width: 18px;
+  height: 18px;
+  background: oklch(0.55 0.12 230);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumbnail-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  background: oklch(0.25 0.03 60 / 0.7);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.thumbnail-item:hover .thumbnail-remove {
+  opacity: 1;
+}
+
+.thumbnail-remove svg {
+  width: 12px;
+  height: 12px;
+  color: white;
 }
 
 /* Ready State */
@@ -895,6 +1105,119 @@ function formatCurrency(value: number): string {
 
 .retry-btn:hover {
   background: oklch(0.45 0.08 60);
+}
+
+/* Incomplete State */
+.incomplete-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 24px;
+}
+
+.incomplete-icon-container {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: oklch(0.94 0.04 85);
+  border-radius: 50%;
+  margin-bottom: 16px;
+}
+
+.incomplete-icon {
+  width: 32px;
+  height: 32px;
+  color: oklch(0.55 0.12 85);
+}
+
+.incomplete-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: oklch(0.35 0.03 60);
+  margin: 0 0 6px 0;
+}
+
+.incomplete-text {
+  font-size: 0.85rem;
+  color: oklch(0.5 0.03 60);
+  margin: 0 0 16px 0;
+  text-align: center;
+}
+
+.incomplete-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.stat-item {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: oklch(0.45 0.08 230);
+  background: oklch(0.95 0.02 230);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.stat-divider {
+  color: oklch(0.7 0.02 60);
+}
+
+.incomplete-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.add-more-btn {
+  flex: 1;
+  background: linear-gradient(135deg, oklch(0.6 0.12 230), oklch(0.5 0.12 230));
+  border: none;
+  color: white;
+}
+
+.add-more-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px oklch(0.55 0.12 230 / 0.35);
+}
+
+.continue-btn {
+  flex: 1;
+  background: white;
+  border: 1px solid oklch(0.85 0.03 60);
+  color: oklch(0.4 0.03 60);
+}
+
+.continue-btn:hover {
+  background: oklch(0.97 0.01 60);
+}
+
+/* Merge Info */
+.merge-info {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.merge-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: oklch(0.45 0.1 230);
+  background: oklch(0.94 0.03 230);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.dedup-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: oklch(0.45 0.1 140);
+  background: oklch(0.94 0.03 140);
+  padding: 3px 8px;
+  border-radius: 4px;
 }
 
 /* Review State */
