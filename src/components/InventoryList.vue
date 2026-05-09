@@ -152,7 +152,7 @@ onUnmounted(() => {
 
       <div v-if="lowStockCount > 0" class="low-stock-badge" @click="showLowStockOnly = !showLowStockOnly">
         <span class="pulse-dot"></span>
-        <span>{{ lowStockCount }} low</span>
+        <span>{{ lowStockCount }} running on fumes</span>
       </div>
     </div>
 
@@ -207,7 +207,7 @@ onUnmounted(() => {
         <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
       </svg>
       <p v-if="searchQuery || showLowStockOnly">No items match your filters</p>
-      <p v-else>No inventory items yet</p>
+      <p v-else>The shelves are bare. Time to stock up.</p>
     </div>
 
     <!-- Inventory Items -->
@@ -222,7 +222,7 @@ onUnmounted(() => {
           <div class="item-info">
             <div class="item-name-row">
               <span class="item-name">{{ item.name }}</span>
-              <span v-if="item.isLowStock" class="low-badge">LOW</span>
+              <span v-if="item.isLowStock" class="low-badge animate-pulse-warning">RUNNING LOW</span>
             </div>
             <span class="item-unit">{{ item.unit }}</span>
           </div>
@@ -693,6 +693,15 @@ onUnmounted(() => {
   font-weight: 700;
   letter-spacing: 0.05em;
   border-radius: 4px;
+}
+
+.low-badge.animate-pulse-warning {
+  animation: pulseWarning 2s ease-in-out infinite;
+}
+
+@keyframes pulseWarning {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 oklch(0.6 0.18 25 / 0.4); }
+  50% { opacity: 0.85; box-shadow: 0 0 0 4px oklch(0.6 0.18 25 / 0); }
 }
 
 .item-unit {

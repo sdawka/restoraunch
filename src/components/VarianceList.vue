@@ -33,10 +33,10 @@ interface CalculateResponse {
 const EXPLANATION_TYPES = [
   { value: 'waste', label: 'Waste', icon: 'trash' },
   { value: 'staff_meals', label: 'Staff Meals', icon: 'utensils' },
-  { value: 'overportioning', label: 'Overportioning', icon: 'scale' },
+  { value: 'overportioning', label: 'Heavy Hand', icon: 'scale' },
   { value: 'comped', label: 'Comped', icon: 'gift' },
   { value: 'recipe_inaccurate', label: 'Recipe Issue', icon: 'recipe' },
-  { value: 'theft', label: 'Theft', icon: 'alert' },
+  { value: 'theft', label: 'Sticky Fingers', icon: 'alert' },
   { value: 'miscount', label: 'Miscount', icon: 'hash' },
   { value: 'other', label: 'Other', icon: 'dots' },
 ] as const
@@ -191,7 +191,7 @@ onMounted(() => {
             </svg>
           </button>
         </div>
-        <p class="header-subtitle">Detect inventory anomalies and track explanations</p>
+        <p class="header-subtitle">Catch the weird stuff before it eats your margins</p>
       </div>
 
       <!-- Explainer Collapsible -->
@@ -275,12 +275,12 @@ onMounted(() => {
       </div>
       <div v-if="hasAnomalies" class="status-summary">
         <span class="anomaly-badge">{{ unresolvedAnomalies.length }}</span>
-        <span class="status-text">anomalies detected</span>
+        <span class="status-text">things that don't add up</span>
         <span class="variance-total">({{ totalVarianceValue }}% total variance)</span>
       </div>
       <div v-else class="status-clear">
         <span class="clear-badge">All Clear</span>
-        <span class="status-text">No significant variances found</span>
+        <span class="status-text">Kitchen's running tight. Nice work.</span>
       </div>
     </div>
 
@@ -380,9 +380,9 @@ onMounted(() => {
           <polyline points="22 4 12 14.01 9 11.01" />
         </svg>
       </div>
-      <h3 class="success-title">Looking Good!</h3>
+      <h3 class="success-title">Kitchen's dialed in.</h3>
       <p class="success-description">
-        No significant inventory variances detected for the selected period.
+        No funny business here. Everything's adding up.
       </p>
     </div>
 

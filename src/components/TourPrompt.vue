@@ -3,11 +3,14 @@
 import { ref, onMounted } from 'vue';
 
 const STORAGE_KEY = 'restoraunch_onboarded';
+const SAMPLE_MODE_KEY = 'restoraunch_sample_mode';
 
 const isVisible = ref(false);
 
 function checkVisibility(): void {
-  isVisible.value = localStorage.getItem(STORAGE_KEY) !== 'true';
+  const hasSeenOnboarding = localStorage.getItem(STORAGE_KEY) === 'true';
+  const isInSampleMode = sessionStorage.getItem(SAMPLE_MODE_KEY) !== null;
+  isVisible.value = !hasSeenOnboarding && !isInSampleMode;
 }
 
 function takeTour(): void {
@@ -35,8 +38,8 @@ onMounted(() => {
         </svg>
       </div>
       <div class="tour-text">
-        <p class="tour-title">New here?</p>
-        <p class="tour-subtitle">Take a quick tour of Restoraunch</p>
+        <p class="tour-title">Fresh off the line?</p>
+        <p class="tour-subtitle">Get the lay of the land before service</p>
       </div>
     </div>
     <div class="tour-actions">
@@ -44,7 +47,7 @@ onMounted(() => {
         Dismiss
       </button>
       <button class="btn btn-primary btn-sm" @click="takeTour" data-testid="tour-take">
-        Take tour
+        Show me around
       </button>
     </div>
   </div>
