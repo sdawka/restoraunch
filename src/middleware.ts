@@ -11,6 +11,7 @@ import {
 
 const isPublicRoute = createRouteMatcher([
   '/',
+  '/compare',
   '/welcome',
   '/welcome/pending',
   '/sign-in(.*)',

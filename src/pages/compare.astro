@@ -1,0 +1,612 @@
+---
+const title = "Compare Restaurant Inventory Software | Restoraunch"
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="oklch(0.15 0.03 60)" />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --warm-50: oklch(0.98 0.01 60);
+        --warm-100: oklch(0.95 0.02 60);
+        --warm-200: oklch(0.90 0.03 60);
+        --warm-300: oklch(0.85 0.05 60);
+        --warm-400: oklch(0.70 0.08 60);
+        --warm-500: oklch(0.55 0.10 60);
+        --warm-600: oklch(0.45 0.10 60);
+        --warm-700: oklch(0.35 0.08 60);
+        --warm-800: oklch(0.25 0.05 60);
+        --warm-900: oklch(0.15 0.03 60);
+        --success: oklch(0.65 0.15 140);
+        --warning: oklch(0.75 0.15 85);
+        --error: oklch(0.60 0.20 25);
+        --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        background: var(--warm-900);
+        color: var(--warm-100);
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Navigation */
+      .nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem 1.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      @media (min-width: 768px) {
+        .nav { padding: 1.5rem 3rem; }
+      }
+
+      .logo {
+        font-family: 'Crimson Pro', Georgia, serif;
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--warm-100);
+        letter-spacing: -0.03em;
+        text-decoration: none;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+      }
+
+      .nav-links a {
+        padding: 0.625rem 1.25rem;
+        text-decoration: none;
+        color: var(--warm-300);
+        font-weight: 500;
+        font-size: 0.9375rem;
+        border-radius: 8px;
+        transition: all 150ms ease;
+      }
+
+      .nav-links a:hover {
+        color: var(--warm-100);
+      }
+
+      .nav-links .cta {
+        background: var(--warm-100);
+        color: var(--warm-900);
+        font-weight: 600;
+      }
+
+      .nav-links .cta:hover {
+        background: white;
+      }
+
+      /* Hero */
+      .hero {
+        text-align: center;
+        padding: 4rem 1.5rem 3rem;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      @media (min-width: 768px) {
+        .hero { padding: 5rem 2rem 4rem; }
+      }
+
+      .hero h1 {
+        font-family: 'Crimson Pro', Georgia, serif;
+        font-size: clamp(2.25rem, 5vw, 3.25rem);
+        font-weight: 600;
+        color: var(--warm-50);
+        letter-spacing: -0.03em;
+        margin-bottom: 1rem;
+      }
+
+      .hero p {
+        font-size: 1.25rem;
+        color: var(--warm-400);
+        line-height: 1.6;
+      }
+
+      /* Section styling */
+      .section {
+        padding: 3rem 1.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      @media (min-width: 768px) {
+        .section { padding: 4rem 3rem; }
+      }
+
+      .section-title {
+        font-family: 'Crimson Pro', Georgia, serif;
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--warm-100);
+        margin-bottom: 1.5rem;
+        letter-spacing: -0.02em;
+      }
+
+      /* Feature Comparison Table */
+      .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 12px;
+        border: 1px solid oklch(0.30 0.04 60 / 0.5);
+      }
+
+      .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9375rem;
+        min-width: 700px;
+      }
+
+      .comparison-table th,
+      .comparison-table td {
+        padding: 1rem 1.25rem;
+        text-align: left;
+        border-bottom: 1px solid oklch(0.30 0.04 60 / 0.3);
+      }
+
+      .comparison-table th {
+        background: oklch(0.20 0.03 60);
+        font-weight: 600;
+        color: var(--warm-200);
+        font-size: 0.8125rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .comparison-table th:first-child {
+        border-radius: 11px 0 0 0;
+      }
+
+      .comparison-table th:last-child {
+        border-radius: 0 11px 0 0;
+      }
+
+      .comparison-table td {
+        background: oklch(0.18 0.02 60);
+      }
+
+      .comparison-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .comparison-table tr:last-child td:first-child {
+        border-radius: 0 0 0 11px;
+      }
+
+      .comparison-table tr:last-child td:last-child {
+        border-radius: 0 0 11px 0;
+      }
+
+      .comparison-table td:first-child {
+        font-weight: 500;
+        color: var(--warm-200);
+      }
+
+      .comparison-table .highlight {
+        background: oklch(0.22 0.04 60);
+      }
+
+      .comparison-table .highlight th,
+      .comparison-table .highlight td {
+        background: oklch(0.25 0.05 60);
+      }
+
+      .check { color: var(--success); font-weight: 600; }
+      .cross { color: var(--warm-500); }
+      .partial { color: var(--warning); font-size: 0.8125rem; }
+      .coming { color: var(--warm-400); font-size: 0.8125rem; font-style: italic; }
+
+      /* Pricing Section */
+      .pricing-section {
+        background: var(--warm-800);
+        padding: 4rem 1.5rem;
+        margin-top: 2rem;
+      }
+
+      @media (min-width: 768px) {
+        .pricing-section { padding: 5rem 3rem; }
+      }
+
+      .pricing-container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .pricing-grid {
+        display: grid;
+        gap: 1rem;
+      }
+
+      @media (min-width: 768px) {
+        .pricing-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1.5rem;
+        }
+      }
+
+      .pricing-card {
+        background: oklch(0.22 0.03 60);
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid oklch(0.30 0.04 60 / 0.3);
+      }
+
+      .pricing-card.featured {
+        border-color: var(--success);
+        background: oklch(0.65 0.15 140 / 0.08);
+      }
+
+      .pricing-card h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--warm-100);
+        margin-bottom: 0.5rem;
+      }
+
+      .pricing-card .price {
+        font-family: 'DM Mono', monospace;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--warm-50);
+        margin-bottom: 0.5rem;
+      }
+
+      .pricing-card.featured .price {
+        color: var(--success);
+      }
+
+      .pricing-card .note {
+        font-size: 0.875rem;
+        color: var(--warm-400);
+      }
+
+      /* Best Fit Section */
+      .fit-section {
+        background: var(--warm-50);
+        color: var(--warm-900);
+        padding: 4rem 1.5rem;
+      }
+
+      @media (min-width: 768px) {
+        .fit-section { padding: 5rem 3rem; }
+      }
+
+      .fit-container {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      .fit-header {
+        text-align: center;
+        margin-bottom: 3rem;
+      }
+
+      .fit-header h2 {
+        font-family: 'Crimson Pro', Georgia, serif;
+        font-size: clamp(1.75rem, 4vw, 2.25rem);
+        font-weight: 600;
+        color: var(--warm-800);
+        letter-spacing: -0.02em;
+        margin-bottom: 0.75rem;
+      }
+
+      .fit-header p {
+        color: var(--warm-500);
+        font-size: 1.125rem;
+      }
+
+      .fit-grid {
+        display: grid;
+        gap: 1.25rem;
+      }
+
+      @media (min-width: 640px) {
+        .fit-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+
+      @media (min-width: 1024px) {
+        .fit-grid { grid-template-columns: repeat(3, 1fr); }
+      }
+
+      .fit-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid var(--warm-200);
+        transition: all 200ms var(--ease-out-expo);
+      }
+
+      .fit-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px oklch(0.25 0.03 60 / 0.1);
+      }
+
+      .fit-card.featured {
+        border-color: var(--success);
+        background: oklch(0.65 0.15 140 / 0.05);
+      }
+
+      .fit-card h3 {
+        font-weight: 600;
+        font-size: 1rem;
+        color: var(--warm-800);
+        margin-bottom: 0.5rem;
+      }
+
+      .fit-card p {
+        font-size: 0.9375rem;
+        color: var(--warm-500);
+        line-height: 1.5;
+      }
+
+      /* CTA Section */
+      .cta-section {
+        background: var(--warm-800);
+        padding: 4rem 1.5rem;
+        text-align: center;
+      }
+
+      @media (min-width: 768px) {
+        .cta-section { padding: 5rem 3rem; }
+      }
+
+      .cta-container {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .cta-section h2 {
+        font-family: 'Crimson Pro', Georgia, serif;
+        font-size: clamp(1.75rem, 4vw, 2.25rem);
+        font-weight: 600;
+        color: var(--warm-50);
+        letter-spacing: -0.02em;
+        margin-bottom: 1rem;
+      }
+
+      .cta-section p {
+        color: var(--warm-400);
+        margin-bottom: 2rem;
+      }
+
+      .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--warm-100);
+        color: var(--warm-900);
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.0625rem;
+        transition: all 200ms ease;
+      }
+
+      .btn-primary:hover {
+        background: white;
+        transform: translateY(-2px);
+      }
+
+      /* Footer */
+      .footer {
+        background: var(--warm-900);
+        color: var(--warm-500);
+        padding: 2rem 1.5rem;
+        text-align: center;
+        font-size: 0.875rem;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav">
+      <a href="/" class="logo">Restoraunch</a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/sign-up" class="cta">Get Started</a>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <h1>The No-BS Comparison</h1>
+      <p>We looked at the competition so you don't have to. Here's the honest breakdown.</p>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Feature Comparison</h2>
+      <div class="table-wrapper">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th class="highlight">Restoraunch</th>
+              <th>MarketMan</th>
+              <th>BlueCart</th>
+              <th>Toast</th>
+              <th>xtraCHEF</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>AI Receipt Scanning</td>
+              <td class="highlight"><span class="check">Yes</span></td>
+              <td><span class="check">Yes</span></td>
+              <td><span class="cross">No</span></td>
+              <td><span class="cross">No</span></td>
+              <td><span class="check">Yes</span></td>
+            </tr>
+            <tr>
+              <td>Real-time Inventory</td>
+              <td class="highlight"><span class="check">Yes</span></td>
+              <td><span class="check">Yes</span></td>
+              <td><span class="partial">Partial</span></td>
+              <td><span class="check">Yes</span></td>
+              <td><span class="cross">No</span></td>
+            </tr>
+            <tr>
+              <td>Variance Detection</td>
+              <td class="highlight"><span class="check">Yes</span></td>
+              <td><span class="check">Yes</span></td>
+              <td><span class="cross">No</span></td>
+              <td><span class="partial">Partial</span></td>
+              <td><span class="check">Yes</span></td>
+            </tr>
+            <tr>
+              <td>Recipe Costing</td>
+              <td class="highlight"><span class="check">Yes</span></td>
+              <td><span class="check">Yes</span></td>
+              <td><span class="cross">No</span></td>
+              <td><span class="check">Yes</span></td>
+              <td><span class="check">Yes</span></td>
+            </tr>
+            <tr>
+              <td>POS Integration</td>
+              <td class="highlight"><span class="coming">Coming soon</span></td>
+              <td><span class="check">Yes</span></td>
+              <td><span class="cross">No</span></td>
+              <td><span class="check">Yes</span></td>
+              <td><span class="check">Yes</span></td>
+            </tr>
+            <tr>
+              <td>Free Tier</td>
+              <td class="highlight"><span class="check">Yes (Beta)</span></td>
+              <td><span class="cross">No</span></td>
+              <td><span class="cross">No</span></td>
+              <td><span class="partial">Limited</span></td>
+              <td><span class="cross">No</span></td>
+            </tr>
+            <tr>
+              <td>Mobile App</td>
+              <td class="highlight"><span class="partial">Web-based</span></td>
+              <td><span class="check">Yes</span></td>
+              <td><span class="check">Yes</span></td>
+              <td><span class="check">Yes</span></td>
+              <td><span class="check">Yes</span></td>
+            </tr>
+            <tr>
+              <td>Setup Time</td>
+              <td class="highlight"><span class="check">Minutes</span></td>
+              <td><span class="partial">Hours</span></td>
+              <td><span class="partial">Hours</span></td>
+              <td><span class="cross">Days</span></td>
+              <td><span class="partial">Hours</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="pricing-section">
+      <div class="pricing-container">
+        <h2 class="section-title">Pricing Comparison</h2>
+        <div class="pricing-grid">
+          <div class="pricing-card featured">
+            <h3>Restoraunch</h3>
+            <div class="price">Free</div>
+            <p class="note">Beta pricing. No credit card required.</p>
+          </div>
+          <div class="pricing-card">
+            <h3>MarketMan</h3>
+            <div class="price">~$200+/mo</div>
+            <p class="note">Per-location pricing, enterprise focus</p>
+          </div>
+          <div class="pricing-card">
+            <h3>BlueCart</h3>
+            <div class="price">$10/mo + 5%</div>
+            <p class="note">Commission on each order</p>
+          </div>
+          <div class="pricing-card">
+            <h3>Toast</h3>
+            <div class="price">$69+/mo</div>
+            <p class="note">Hardware costs extra</p>
+          </div>
+          <div class="pricing-card">
+            <h3>xtraCHEF</h3>
+            <div class="price">Custom</div>
+            <p class="note">Enterprise pricing, contact sales</p>
+          </div>
+          <div class="pricing-card">
+            <h3>MarginEdge</h3>
+            <div class="price">$300+/mo</div>
+            <p class="note">Requires POS integration</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="fit-section">
+      <div class="fit-container">
+        <div class="fit-header">
+          <h2>Who's each tool best for?</h2>
+          <p>Pick your fighter based on what you actually need.</p>
+        </div>
+        <div class="fit-grid">
+          <div class="fit-card featured">
+            <h3>Restoraunch</h3>
+            <p>You want it simple, you want it now, and you don't want to remortgage the restaurant.</p>
+          </div>
+          <div class="fit-card">
+            <h3>MarketMan</h3>
+            <p>You've got multiple locations and a dedicated ops person who loves spreadsheets.</p>
+          </div>
+          <div class="fit-card">
+            <h3>BlueCart</h3>
+            <p>You're mostly here for the ordering, not the inventory drama.</p>
+          </div>
+          <div class="fit-card">
+            <h3>Toast</h3>
+            <p>You need the whole shebang, POS and all. Budget isn't your main concern.</p>
+          </div>
+          <div class="fit-card">
+            <h3>xtraCHEF</h3>
+            <p>Your AP department is drowning in invoices and someone finally approved the budget.</p>
+          </div>
+          <div class="fit-card">
+            <h3>MarginEdge</h3>
+            <p>You're already on a POS they integrate with and want real-time food costs.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <div class="cta-container">
+        <h2>Ready to try the simple option?</h2>
+        <p>No credit card. No sales calls. No catch.</p>
+        <a href="/sign-up" class="btn-primary">
+          Try Restoraunch Free
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 8h10M9 4l4 4-4 4"/>
+          </svg>
+        </a>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>&copy; 2026 Restoraunch. Made for kitchens that don't accept excuses.</p>
+    </footer>
+  </body>
+</html>
