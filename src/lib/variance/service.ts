@@ -20,7 +20,7 @@ export const EXPLANATION_TYPES = [
   "overportioning",
   "comped",
   "recipe_inaccurate",
-  "theft",
+  "shrinkage",
   "miscount",
   "other",
 ] as const;

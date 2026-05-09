@@ -263,7 +263,7 @@ watch(
             </div>
           </div>
 
-          <!-- Fishy Business -->
+          <!-- Anomalies -->
           <div class="card alerts-card" :class="{ 'has-errors': data.unresolvedAnomalies > 0 }">
             <div class="alerts-header">
               <div class="alerts-icon error-icon" :class="{ 'animate-pulse-warning': data.unresolvedAnomalies > 0 }">
@@ -271,7 +271,7 @@ watch(
                   <path d="M12 8v4m0 4h.01M4.93 19h14.14c1.3 0 2.13-1.4 1.5-2.5L13.5 4.5a1.72 1.72 0 00-3 0L3.43 16.5c-.63 1.1.2 2.5 1.5 2.5z" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </div>
-              <div class="alerts-title">Fishy Business</div>
+              <div class="alerts-title">Weird Numbers</div>
               <div class="alerts-count" :class="[data.unresolvedAnomalies > 0 ? 'error-count' : '', { 'animate-wiggle': data.unresolvedAnomalies > 0 }]">
                 {{ data.unresolvedAnomalies }}
               </div>

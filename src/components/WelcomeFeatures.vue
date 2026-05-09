@@ -19,7 +19,7 @@ const basicFeatures: Feature[] = [
 
 const advancedFeatures: Feature[] = [
   { id: 'receipt-scanning', title: 'Receipt Scanning', description: 'AI extracts items and prices from receipt photos', href: '/inventory?scan=true', icon: 'scan' },
-  { id: 'variance', title: 'Variance Analysis', description: 'Spot waste, theft, and discrepancies automatically', href: '/insights', icon: 'variance' },
+  { id: 'variance', title: 'Variance Analysis', description: 'Spot anomalies and discrepancies automatically', href: '/insights', icon: 'variance' },
   { id: 'scenarios', title: 'Scenario Modeling', description: 'What-if analysis for new menu items and price changes', href: '/model', icon: 'model' },
   { id: 'insights', title: 'AI Insights', description: 'Get actionable recommendations to improve margins', href: '/insights', icon: 'insights' },
 ];

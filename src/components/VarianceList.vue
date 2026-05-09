@@ -36,7 +36,7 @@ const EXPLANATION_TYPES = [
   { value: 'overportioning', label: 'Heavy Hand', icon: 'scale' },
   { value: 'comped', label: 'Comped', icon: 'gift' },
   { value: 'recipe_inaccurate', label: 'Recipe Issue', icon: 'recipe' },
-  { value: 'theft', label: 'Sticky Fingers', icon: 'alert' },
+  { value: 'shrinkage', label: 'Poltergeist', icon: 'ghost' },
   { value: 'miscount', label: 'Miscount', icon: 'hash' },
   { value: 'other', label: 'Other', icon: 'dots' },
 ] as const
