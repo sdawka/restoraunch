@@ -1,8 +1,7 @@
 import type { APIContext } from 'astro';
 import { env } from 'cloudflare:workers';
-import { createAIService } from '../../../lib/ai/service';
+import { createAIService, type TrackedReceiptItem } from '../../../lib/ai/service';
 import { getInventoryItems } from '../../../lib/db/queries';
-import { deduplicateItems } from '../../../lib/ai/deduplication';
 
 export const prerender = false;
 
@@ -55,14 +54,11 @@ export async function POST(context: APIContext): Promise<Response> {
   }
 
   const aiService = createAIService({ apiKey: env.OPENROUTER_API_KEY });
-  const parsed = await aiService.parseMultiPhotoReceipt(imageUrls);
-
-  // Apply fallback deduplication as safety net
-  const { items: deduplicatedItems, duplicatesRemoved } = deduplicateItems(parsed.items);
+  const parsed = await aiService.parseMultiPhotoReceiptTracked(imageUrls);
 
   const inventoryItems = await getInventoryItems(env.DB, location.locationId);
   const itemsWithMatches = await Promise.all(
-    deduplicatedItems.map(async item => {
+    parsed.items.map(async (item: TrackedReceiptItem) => {
       const match = await aiService.matchInventoryItem(
         { name: item.name, unit: item.unit },
         inventoryItems.map(i => ({ id: i.id, name: i.name, unit: i.unit }))
@@ -81,13 +77,32 @@ export async function POST(context: APIContext): Promise<Response> {
     photoUrl: imageUrls[0], // Backward compatibility
     supplier: parsed.vendor,
     items: itemsWithMatches,
-    total: parsed.total,
+    total: parsed.extractedTotal,
     date: parsed.date,
     isPartial: parsed.isPartial,
-    mergeInfo: {
-      photosProcessed: imageUrls.length,
-      itemsBeforeDedup: parsed.items.length,
-      duplicatesRemoved,
+    // Validation info
+    validation: {
+      extractedTotal: parsed.extractedTotal,
+      calculatedTotal: parsed.calculatedTotal,
+      discrepancy: parsed.discrepancy,
+      isValid: parsed.discrepancy < 1, // Less than $1 difference
+    },
+    // Per-image breakdown for debugging/retry
+    perImageResults: parsed.perImageResults.map(img => ({
+      imageIndex: img.imageIndex,
+      imageUrl: imageUrls[img.imageIndex],
+      itemCount: img.items.length,
+      vendor: img.vendor,
+      date: img.date,
+      subtotal: img.subtotal,
+      tokensUsed: img.tokensUsed,
+      cost: img.cost,
+    })),
+    // Cost tracking
+    extraction: {
+      totalTokensUsed: parsed.totalTokensUsed,
+      totalCost: parsed.totalCost,
+      photosProcessed: parsed.photoCount,
     },
   }), {
     headers: { 'Content-Type': 'application/json' },
