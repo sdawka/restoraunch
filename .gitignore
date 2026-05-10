@@ -28,3 +28,8 @@ pnpm-debug.log*
 
 # test results
 test-results/
+playwright/.clerk/
+
+# AI consistency test fixtures (large images)
+tests/integration/ai-consistency/fixtures/receipts/*.jpg
+tests/integration/ai-consistency/fixtures/receipts/*.png

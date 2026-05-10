@@ -72,6 +72,9 @@ export async function POST(context: APIContext): Promise<Response> {
     })
   );
 
+  // Calculate items before dedup for backward compat
+  const totalItemsBeforeDedup = parsed.perImageResults.reduce((sum, img) => sum + img.items.length, 0);
+
   return new Response(JSON.stringify({
     photoUrls: imageUrls,
     photoUrl: imageUrls[0], // Backward compatibility
@@ -80,6 +83,12 @@ export async function POST(context: APIContext): Promise<Response> {
     total: parsed.extractedTotal,
     date: parsed.date,
     isPartial: parsed.isPartial,
+    // Backward compatibility
+    mergeInfo: {
+      photosProcessed: parsed.photoCount,
+      itemsBeforeDedup: totalItemsBeforeDedup,
+      duplicatesRemoved: totalItemsBeforeDedup - parsed.items.length,
+    },
     // Validation info
     validation: {
       extractedTotal: parsed.extractedTotal,

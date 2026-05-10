@@ -250,6 +250,12 @@ This is ONE photo of a potentially multi-photo receipt. Extract every item you c
 Do NOT deduplicate - extract exactly what's visible, even if items seem repeated.
 </task>
 
+<receipt_format>
+Typical wholesale receipt columns: SKU | ITEM NAME | SIZE | QTY | UNIT PRICE | TOTAL
+- CRV/deposit lines are separate items (California Redemption Value)
+- Look for item descriptions that may wrap to multiple lines
+</receipt_format>
+
 <schema>
 {
   "vendor": "string|null - supplier name if visible in this section",
@@ -261,6 +267,7 @@ Do NOT deduplicate - extract exactly what's visible, even if items seem repeated
 
 <rules>
 - Extract EVERY line item visible, do not skip any
+- All prices must be POSITIVE (no negative numbers)
 - Convert units: pounds→lb, ounces→oz, gallons→gal, quarts→qt, each/ea→each
 - Strip currency symbols from numbers
 - Use null for vendor/date/subtotal if not visible in this image
@@ -557,8 +564,12 @@ export function createAIService(config: AIServiceConfig): AIService {
           extractedTotal = result.subtotal;
         }
 
-        // Add items with source tracking
+        // Add items with source tracking, filtering out invalid entries
         for (const item of result.items) {
+          // Skip items with negative or zero prices (likely OCR errors)
+          if (item.totalPrice <= 0 || item.unitPrice < 0) {
+            continue;
+          }
           allItems.push({
             ...item,
             sourceImageIndex: result.imageIndex,

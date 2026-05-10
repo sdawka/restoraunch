@@ -1,5 +1,4 @@
 import { Page } from '@playwright/test';
-import { setupClerkTestingToken } from '@clerk/testing/playwright';
 
 export async function clearOnboardingState(page: Page): Promise<void> {
   // Navigate to page first to get localStorage context
@@ -26,6 +25,7 @@ export async function waitForLoadingComplete(page: Page): Promise<void> {
   await page.waitForSelector('.loading-shimmer', { state: 'detached' }).catch(() => {});
 }
 
-export async function setupAuthenticatedSession(page: Page): Promise<void> {
-  await setupClerkTestingToken({ page });
+export async function setupAuthenticatedSession(_page: Page): Promise<void> {
+  // Auth is handled globally via storageState in playwright.config.ts
+  // This function is kept for backwards compatibility
 }

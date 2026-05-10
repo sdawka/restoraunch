@@ -10,7 +10,7 @@ export async function POST(context: APIContext): Promise<Response> {
   }
 
   const { DB, CLERK_SECRET_KEY } = env
-  const { name } = await context.request.json()
+  const { name, restaurantType } = await context.request.json()
 
   if (!name || typeof name !== 'string' || name.trim().length === 0) {
     return new Response(JSON.stringify({ error: 'Name is required' }), {
@@ -19,11 +19,14 @@ export async function POST(context: APIContext): Promise<Response> {
     })
   }
 
+  const validTypes = ['fast_casual', 'fine_dining', 'bar_brewery', 'cafe', 'food_truck']
+  const type = validTypes.includes(restaurantType) ? restaurantType : null
+
   // Create location
   const result = await DB.prepare(
-    `INSERT INTO locations (name, owner_id) VALUES (?, ?)`
+    `INSERT INTO locations (name, owner_id, restaurant_type) VALUES (?, ?, ?)`
   )
-    .bind(name.trim(), userId)
+    .bind(name.trim(), userId, type)
     .run()
 
   const locationId = result.meta.last_row_id
