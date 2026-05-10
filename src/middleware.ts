@@ -14,6 +14,7 @@ const isPublicRoute = createRouteMatcher([
   '/compare',
   '/welcome',
   '/welcome/pending',
+  '/onboarding',
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/webhooks/(.*)',
@@ -59,7 +60,7 @@ const locationAuth = defineMiddleware(async (context, next) => {
   const defaultLocation = await getDefaultLocation(DB, authResult.userId)
 
   if (!defaultLocation) {
-    return context.redirect('/welcome/pending')
+    return context.redirect('/onboarding')
   }
 
   const response = context.redirect(context.request.url)
