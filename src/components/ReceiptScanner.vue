@@ -1,7 +1,14 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import ReceiptItemRow from './ReceiptItemRow.vue';
+import OcrHints from './OcrHints.vue';
 
 type ScannerState = 'ready' | 'scanning' | 'reviewing' | 'confirming' | 'confirmed' | 'error' | 'incomplete';
+
+interface Supplier {
+  id: number;
+  name: string;
+}
 
 interface ParsedItem {
   name: string;
@@ -52,6 +59,33 @@ const cameraActive = ref(false);
 // Multi-photo state
 const capturedImages = ref<CapturedImage[]>([]);
 const accumulatedItems = ref<ParsedItem[]>([]);
+
+// Supplier selection state
+const suppliers = ref<Supplier[]>([]);
+const selectedSupplierId = ref<number | null>(null);
+
+// Item editing state
+const editedItems = ref<Map<number, Partial<ParsedItem>>>(new Map());
+
+function handleItemUpdate(index: number, updates: Partial<ParsedItem>) {
+  editedItems.value.set(index, { ...editedItems.value.get(index), ...updates });
+  // Also update the scanResult for immediate visual feedback
+  if (scanResult.value) {
+    const item = scanResult.value.items[index];
+    Object.assign(item, updates);
+  }
+}
+
+onMounted(async () => {
+  try {
+    const response = await fetch('/api/suppliers');
+    if (response.ok) {
+      suppliers.value = await response.json();
+    }
+  } catch {
+    // Silently fail - supplier selection will fall back to text display
+  }
+});
 
 const reviewItems = computed(() => {
   if (!scanResult.value) return [];
@@ -222,6 +256,14 @@ async function scanAllImages() {
     });
     selectedItems.value = new Set(selectedItems.value);
 
+    // Auto-select matching supplier from extracted name
+    const extractedSupplier = scanResult.value.supplier.toLowerCase();
+    const matchedSupplier = suppliers.value.find(s =>
+      s.name.toLowerCase().includes(extractedSupplier) ||
+      extractedSupplier.includes(s.name.toLowerCase())
+    );
+    selectedSupplierId.value = matchedSupplier?.id ?? suppliers.value[0]?.id ?? null;
+
     // If partial receipt detected, prompt for more photos
     if (scanResult.value.isPartial) {
       state.value = 'incomplete';
@@ -268,8 +310,7 @@ async function confirmReceipt() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        supplierId: 1, // Default supplier for now
-        locationId: 1, // Default location for now
+        supplierId: selectedSupplierId.value ?? 1,
         photoUrl: scanResult.value.photoUrl,
         items: itemsToConfirm,
         total: totalSelected.value,
@@ -300,6 +341,7 @@ function resetScanner() {
   error.value = null;
   scanResult.value = null;
   selectedItems.value.clear();
+  editedItems.value.clear();
   // Clean up captured image previews
   capturedImages.value.forEach(img => URL.revokeObjectURL(img.preview));
   capturedImages.value = [];
@@ -506,7 +548,16 @@ function formatCurrency(value: number): string {
       <!-- Receipt Preview -->
       <div class="receipt-preview">
         <div class="receipt-meta">
-          <span class="supplier-name">{{ scanResult?.supplier }}</span>
+          <select
+            v-if="suppliers.length > 0"
+            v-model="selectedSupplierId"
+            class="supplier-select"
+          >
+            <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
+              {{ supplier.name }}
+            </option>
+          </select>
+          <span v-else class="supplier-name">{{ scanResult?.supplier }}</span>
           <span class="receipt-date">{{ scanResult?.date }}</span>
         </div>
         <div v-if="scanResult?.mergeInfo && scanResult.mergeInfo.photosProcessed > 1" class="merge-info">
@@ -519,6 +570,9 @@ function formatCurrency(value: number): string {
         </div>
       </div>
 
+      <!-- OCR Tips -->
+      <OcrHints />
+
       <!-- Selection Controls -->
       <div class="selection-controls">
         <span class="selection-count">{{ selectedCount }} of {{ reviewItems.length }} selected</span>
@@ -530,30 +584,15 @@ function formatCurrency(value: number): string {
 
       <!-- Items List -->
       <div class="review-items">
-        <div
+        <ReceiptItemRow
           v-for="item in reviewItems"
           :key="item.index"
-          :class="['review-item', { selected: item.selected, 'new-item': item.isNewItem }]"
-          @click="toggleItem(item.index)"
-        >
-          <div class="item-checkbox">
-            <svg v-if="item.selected" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-          </div>
-
-          <div class="item-details">
-            <div class="item-name-row">
-              <span class="item-name">{{ item.name }}</span>
-              <span v-if="item.isNewItem" class="new-badge">NEW</span>
-              <span v-else-if="item.matchConfidence >= 0.9" class="match-badge high">High match</span>
-              <span v-else-if="item.matchConfidence >= 0.7" class="match-badge medium">Likely match</span>
-            </div>
-            <span class="item-quantity">{{ item.quantity }} {{ item.unit }} @ {{ formatCurrency(item.unitCost) }}</span>
-          </div>
-
-          <span class="item-total">{{ formatCurrency(item.quantity * item.unitCost) }}</span>
-        </div>
+          :item="item"
+          :index="item.index"
+          :selected="item.selected"
+          @toggle="toggleItem"
+          @update:item="handleItemUpdate"
+        />
       </div>
 
       <!-- Total & Confirm -->
@@ -1241,6 +1280,29 @@ function formatCurrency(value: number): string {
   color: oklch(0.3 0.03 60);
 }
 
+.supplier-select {
+  font-weight: 600;
+  color: oklch(0.3 0.03 60);
+  font-size: 0.95rem;
+  font-family: inherit;
+  padding: 6px 28px 6px 10px;
+  border: 1px solid oklch(0.88 0.02 60);
+  border-radius: 6px;
+  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 8px center;
+  appearance: none;
+  cursor: pointer;
+}
+
+.supplier-select:hover {
+  border-color: oklch(0.7 0.08 230);
+}
+
+.supplier-select:focus {
+  outline: none;
+  border-color: oklch(0.6 0.12 230);
+  box-shadow: 0 0 0 3px oklch(0.6 0.12 230 / 0.15);
+}
+
 .receipt-date {
   font-size: 0.85rem;
   color: oklch(0.55 0.03 60);
@@ -1284,107 +1346,6 @@ function formatCurrency(value: number): string {
 .review-items {
   max-height: 300px;
   overflow-y: auto;
-}
-
-.review-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 24px;
-  border-bottom: 1px solid oklch(0.96 0.01 60);
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.review-item:hover {
-  background: oklch(0.99 0.005 60);
-}
-
-.review-item.selected {
-  background: oklch(0.97 0.02 140);
-}
-
-.review-item.new-item {
-  border-left: 3px solid oklch(0.65 0.12 230);
-  padding-left: 21px;
-}
-
-.item-checkbox {
-  width: 22px;
-  height: 22px;
-  border: 2px solid oklch(0.8 0.03 60);
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.15s ease;
-}
-
-.review-item.selected .item-checkbox {
-  background: oklch(0.55 0.15 140);
-  border-color: oklch(0.55 0.15 140);
-}
-
-.item-checkbox svg {
-  width: 14px;
-  height: 14px;
-  color: white;
-}
-
-.item-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.item-name-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.item-name {
-  font-weight: 600;
-  color: oklch(0.3 0.03 60);
-  font-size: 0.9rem;
-}
-
-.new-badge {
-  padding: 2px 8px;
-  background: oklch(0.6 0.12 230);
-  color: white;
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  border-radius: 4px;
-}
-
-.match-badge {
-  padding: 2px 8px;
-  font-size: 0.65rem;
-  font-weight: 600;
-  border-radius: 4px;
-}
-
-.match-badge.high {
-  background: oklch(0.92 0.04 140);
-  color: oklch(0.4 0.12 140);
-}
-
-.match-badge.medium {
-  background: oklch(0.93 0.04 85);
-  color: oklch(0.45 0.12 85);
-}
-
-.item-quantity {
-  font-size: 0.8rem;
-  color: oklch(0.55 0.03 60);
-}
-
-.item-total {
-  font-weight: 600;
-  color: oklch(0.35 0.03 60);
-  font-variant-numeric: tabular-nums;
 }
 
 .review-footer {
