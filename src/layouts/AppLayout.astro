@@ -1,16 +1,44 @@
 ---
+import { env } from 'cloudflare:workers';
 import '../styles/global.css';
 import Nav from '../components/Nav.vue';
 import ScanButton from '../components/ScanButton.vue';
+import Header from '../components/Header.vue';
+import ProfilePanel from '../components/ProfilePanel.vue';
+import { getUserById } from '../lib/db/users';
 
 interface Props {
   title: string;
   hideNav?: boolean;
   hideScanButton?: boolean;
+  hideHeader?: boolean;
 }
 
-const { title, hideNav = false, hideScanButton = false } = Astro.props;
+const { title, hideNav = false, hideScanButton = false, hideHeader = false } = Astro.props;
 const currentPath = Astro.url.pathname;
+
+let userEmail = '';
+let locationName = '';
+let avatarUrl: string | undefined;
+
+const authResult = Astro.locals.auth();
+if (authResult.userId) {
+  const { DB } = env;
+
+  const user = await getUserById(DB, authResult.userId);
+  if (user) {
+    userEmail = user.email;
+    avatarUrl = user.avatar_url || undefined;
+  }
+
+  const location = Astro.locals.location;
+  if (location?.locationId) {
+    const loc = await DB.prepare('SELECT name FROM locations WHERE id = ?')
+      .bind(location.locationId)
+      .first<{ name: string }>();
+    locationName = loc?.name || '';
+  }
+}
 ---
 
 <!doctype html>
@@ -33,6 +61,10 @@ const currentPath = Astro.url.pathname;
     </script>
   </head>
   <body class="app-shell">
+    {!hideHeader && userEmail && (
+      <Header avatarUrl={avatarUrl} client:load />
+    )}
+
     <div class="app-content">
       <slot />
     </div>
@@ -43,6 +75,14 @@ const currentPath = Astro.url.pathname;
 
     {!hideNav && (
       <Nav currentPath={currentPath} client:load />
+    )}
+
+    {!hideHeader && userEmail && (
+      <ProfilePanel
+        userEmail={userEmail}
+        locationName={locationName}
+        client:load
+      />
     )}
 
     <div id="modal-root"></div>
@@ -66,6 +106,10 @@ const currentPath = Astro.url.pathname;
         flex: 1;
         display: flex;
         flex-direction: column;
+      }
+
+      .app-shell:has(.header-container) .app-content {
+        padding-top: calc(3.25rem + env(safe-area-inset-top, 0px));
       }
 
       /* Smooth scroll behavior */
