@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { signOut } from '@clerk/astro/client'
+import { $clerkStore } from '@clerk/astro/client'
 
 defineProps<{
   userEmail: string
@@ -18,7 +18,7 @@ const close = () => {
 }
 
 const handleLogout = () => {
-  signOut({ redirectUrl: '/sign-in' })
+  $clerkStore.get()?.signOut({ redirectUrl: '/sign-in' })
 }
 
 onMounted(() => {
