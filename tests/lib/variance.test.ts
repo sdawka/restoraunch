@@ -310,7 +310,7 @@ describe("Variance Service", () => {
       expect(EXPLANATION_TYPES).toContain("overportioning");
       expect(EXPLANATION_TYPES).toContain("comped");
       expect(EXPLANATION_TYPES).toContain("recipe_inaccurate");
-      expect(EXPLANATION_TYPES).toContain("theft");
+      expect(EXPLANATION_TYPES).toContain("shrinkage");
       expect(EXPLANATION_TYPES).toContain("miscount");
       expect(EXPLANATION_TYPES).toContain("other");
       expect(EXPLANATION_TYPES).toHaveLength(8);

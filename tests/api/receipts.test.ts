@@ -91,7 +91,9 @@ function createConfirmContext(body: unknown) {
 const parsedReceipt = {
   vendor: 'Sysco',
   date: '2024-03-15',
-  total: 149.85,
+  extractedTotal: 149.85,
+  calculatedTotal: 135.40,
+  discrepancy: 14.45,
   items: [
     { name: 'Chicken Breast', quantity: 10, unit: 'lb', unitPrice: 4.99, totalPrice: 49.90 },
     { name: 'Olive Oil', quantity: 3, unit: 'gal', unitPrice: 28.50, totalPrice: 85.50 },
@@ -121,7 +123,7 @@ describe('POST /api/receipts/scan', () => {
 
     const mockAI = {
       parseReceipt: vi.fn().mockResolvedValue(parsedReceipt),
-      parseMultiPhotoReceipt: vi.fn().mockResolvedValue({ ...parsedReceipt, isPartial: false, photoCount: 1 }),
+      parseMultiPhotoReceiptTracked: vi.fn().mockResolvedValue({ ...parsedReceipt, isPartial: false, photoCount: 1, perImageResults: [] }),
       matchInventoryItem: vi.fn().mockResolvedValue(mockMatch),
       parsePOSScreen: vi.fn(),
     };
@@ -142,7 +144,7 @@ describe('POST /api/receipts/scan', () => {
     expect(body.items[0].matchedInventoryItemId).toBe(1);
     expect(body.items[0].matchConfidence).toBe(0.95);
     expect(body.photoUrl).toContain('receipts/');
-    expect(mockAI.parseMultiPhotoReceipt).toHaveBeenCalledTimes(1);
+    expect(mockAI.parseMultiPhotoReceiptTracked).toHaveBeenCalledTimes(1);
     expect(mockAI.matchInventoryItem).toHaveBeenCalledTimes(2);
   });
 
@@ -203,7 +205,7 @@ describe('POST /api/receipts/scan', () => {
 
     const mockAI = {
       parseReceipt: vi.fn().mockRejectedValue(new Error('AI service unavailable')),
-      parseMultiPhotoReceipt: vi.fn().mockRejectedValue(new Error('AI service unavailable')),
+      parseMultiPhotoReceiptTracked: vi.fn().mockRejectedValue(new Error('AI service unavailable')),
       matchInventoryItem: vi.fn(),
       parsePOSScreen: vi.fn(),
     };
@@ -234,11 +236,12 @@ describe('POST /api/receipts/scan', () => {
       items: [parsedReceipt.items[0]], // Deduplicated to 1 item
       isPartial: false,
       photoCount: 2,
+      perImageResults: [],
     };
 
     const mockAI = {
       parseReceipt: vi.fn(),
-      parseMultiPhotoReceipt: vi.fn().mockResolvedValue(multiPhotoResult),
+      parseMultiPhotoReceiptTracked: vi.fn().mockResolvedValue(multiPhotoResult),
       matchInventoryItem: vi.fn().mockResolvedValue(mockMatch),
       parsePOSScreen: vi.fn(),
     };
@@ -255,7 +258,7 @@ describe('POST /api/receipts/scan', () => {
     expect(response.status).toBe(200);
     expect(body.photoUrls).toHaveLength(2);
     expect(body.mergeInfo.photosProcessed).toBe(2);
-    expect(mockAI.parseMultiPhotoReceipt).toHaveBeenCalledWith(
+    expect(mockAI.parseMultiPhotoReceiptTracked).toHaveBeenCalledWith(
       expect.arrayContaining([
         expect.stringContaining('receipts/'),
         expect.stringContaining('receipts/'),
