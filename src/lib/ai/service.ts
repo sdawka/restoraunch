@@ -99,7 +99,7 @@ interface AIServiceConfig {
 }
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL = "google/gemini-3.1-flash-lite-preview";
+const DEFAULT_MODEL = "google/gemini-3.1-flash-lite";
 
 // JSON Schemas for structured outputs (OpenRouter enforces these)
 const RECEIPT_SCHEMA = {
