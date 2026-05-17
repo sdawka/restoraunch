@@ -216,7 +216,10 @@ describe('POST /api/receipts/scan', () => {
 
     const ctx = createScanContext({ formData, db });
 
-    await expect(scanPOST(ctx)).rejects.toThrow('AI service unavailable');
+    const response = await scanPOST(ctx);
+    expect(response.status).toBe(500);
+    const data = await response.json();
+    expect(data.error).toContain('AI parsing failed');
   });
 
   it('handles multiple images via images[] field', async () => {

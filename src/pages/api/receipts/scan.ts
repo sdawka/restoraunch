@@ -46,15 +46,36 @@ export async function POST(context: APIContext): Promise<Response> {
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     const arrayBuffer = await file.arrayBuffer();
-    const key = `receipts/${Date.now()}-${i}-${file.name}`;
-    await env.R2_IMAGES.put(key, arrayBuffer, {
-      httpMetadata: { contentType: file.type },
-    });
+    // Sanitize filename: remove special chars, keep extension
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const safeExt = /^(jpg|jpeg|png|gif|webp|heic|heif)$/.test(ext) ? ext : 'jpg';
+    const key = `receipts/${Date.now()}-${i}.${safeExt}`;
+    try {
+      await env.R2_IMAGES.put(key, arrayBuffer, {
+        httpMetadata: { contentType: file.type || `image/${safeExt}` },
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Unknown R2 error';
+      return new Response(JSON.stringify({ error: `R2 upload failed: ${msg}` }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
     imageUrls.push(`${origin}/images/${key}`);
   }
 
   const aiService = createAIService({ apiKey: env.OPENROUTER_API_KEY });
-  const parsed = await aiService.parseMultiPhotoReceiptTracked(imageUrls);
+
+  let parsed;
+  try {
+    parsed = await aiService.parseMultiPhotoReceiptTracked(imageUrls);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Unknown AI error';
+    return new Response(JSON.stringify({ error: `AI parsing failed: ${msg}` }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   const inventoryItems = await getInventoryItems(env.DB, location.locationId);
   const itemsWithMatches = await Promise.all(
