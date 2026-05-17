@@ -55,6 +55,7 @@ const canvasRef = ref<HTMLCanvasElement | null>(null);
 const stream = ref<MediaStream | null>(null);
 const isMobile = ref(typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
 const cameraActive = ref(false);
+const isDragging = ref(false);
 
 // Multi-photo state
 const capturedImages = ref<CapturedImage[]>([]);
@@ -138,6 +139,33 @@ function handleFileSelect(event: Event) {
 
 function triggerFileUpload() {
   fileInput.value?.click();
+}
+
+function handleDragOver(e: DragEvent) {
+  e.preventDefault();
+  isDragging.value = true;
+}
+
+function handleDragLeave(e: DragEvent) {
+  e.preventDefault();
+  const target = e.currentTarget as HTMLElement;
+  if (!target.contains(e.relatedTarget as Node)) {
+    isDragging.value = false;
+  }
+}
+
+async function handleDrop(e: DragEvent) {
+  e.preventDefault();
+  isDragging.value = false;
+
+  const files = e.dataTransfer?.files;
+  if (!files?.length) return;
+
+  const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+  if (imageFiles.length === 0) return;
+
+  imageFiles.forEach(file => addCapturedImage(file));
+  await scanAllImages();
 }
 
 async function startCamera() {
@@ -423,7 +451,14 @@ function formatCurrency(value: number): string {
         </div>
       </div>
 
-      <div class="upload-zone" @click="triggerFileUpload">
+      <div
+        class="upload-zone"
+        :class="{ 'drag-over': isDragging }"
+        @click="triggerFileUpload"
+        @dragover="handleDragOver"
+        @dragleave="handleDragLeave"
+        @drop="handleDrop"
+      >
         <div class="upload-icon-container">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="upload-icon">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -880,6 +915,12 @@ function formatCurrency(value: number): string {
 .upload-zone:hover {
   border-color: oklch(0.7 0.08 230);
   background: oklch(0.98 0.01 230);
+}
+
+.upload-zone.drag-over {
+  border-color: oklch(0.55 0.12 230);
+  background: oklch(0.96 0.03 230);
+  border-style: solid;
 }
 
 .upload-icon-container {
