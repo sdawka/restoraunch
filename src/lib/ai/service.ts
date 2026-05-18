@@ -1,4 +1,10 @@
-import { RECEIPT_PARSE_PROMPT, POS_PARSE_PROMPT, ITEM_MATCH_PROMPT, MULTI_PHOTO_RECEIPT_PROMPT } from "./prompts";
+import {
+  RECEIPT_PARSE_PROMPT,
+  MULTI_PHOTO_RECEIPT_PROMPT,
+  POS_PARSE_PROMPT,
+  ITEM_MATCH_PROMPT,
+  VOICE_PARSE_PROMPT,
+} from "./prompts";
 import { roundMoney } from '../utils/money';
 
 // Interfaces
@@ -70,6 +76,13 @@ export interface ParsedSales {
   totalRevenue: number;
 }
 
+export interface ParsedVoiceItem {
+  name: string;
+  quantity: number;
+  unit: string;
+  price: number;
+}
+
 export interface ItemMatch {
   matchedId: number | null;
   confidence: number;
@@ -91,6 +104,7 @@ export interface AIService {
     receiptItem: { name: string; unit: string },
     inventoryItems: InventoryItemForMatch[]
   ): Promise<ItemMatch>;
+  parseVoiceItem(transcript: string): Promise<ParsedVoiceItem>;
 }
 
 interface AIServiceConfig {
@@ -244,6 +258,22 @@ const SINGLE_IMAGE_EXTRACT_SCHEMA = {
   },
 };
 
+const VOICE_ITEM_SCHEMA = {
+  name: "parsed_voice_item",
+  strict: true,
+  schema: {
+    type: "object",
+    properties: {
+      name: { type: "string" },
+      quantity: { type: "number" },
+      unit: { type: "string" },
+      price: { type: "number" },
+    },
+    required: ["name", "quantity", "unit", "price"],
+    additionalProperties: false,
+  },
+};
+
 const SINGLE_IMAGE_EXTRACT_PROMPT = `Extract ALL line items visible in this receipt image.
 
 <task>
@@ -365,6 +395,19 @@ function validateItemMatch(data: unknown): ItemMatch {
     matchedId: typeof obj.matchedId === 'number' ? obj.matchedId : null,
     confidence: typeof obj.confidence === 'number' ? Math.max(0, Math.min(1, obj.confidence)) : 0,
     reasoning: typeof obj.reasoning === 'string' ? obj.reasoning : 'No reasoning provided',
+  };
+}
+
+function validateVoiceItem(data: unknown): ParsedVoiceItem {
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid voice item response');
+  }
+  const obj = data as Record<string, unknown>;
+  return {
+    name: String(obj.name || 'Unknown Item'),
+    quantity: Number(obj.quantity) || 1,
+    unit: String(obj.unit || 'each'),
+    price: Number(obj.price) || 0,
   };
 }
 
@@ -658,6 +701,17 @@ export function createAIService(config: AIServiceConfig): AIService {
 
       const result = await callAPI<unknown>(messages, ITEM_MATCH_SCHEMA);
       return validateItemMatch(result);
+    },
+
+    async parseVoiceItem(transcript: string): Promise<ParsedVoiceItem> {
+      const sanitizedTranscript = sanitizeForPrompt(transcript.slice(0, 500));
+
+      const prompt = VOICE_PARSE_PROMPT.replace("{transcript}", sanitizedTranscript);
+
+      const messages = [{ role: "user", content: prompt }];
+
+      const result = await callAPI<unknown>(messages, VOICE_ITEM_SCHEMA);
+      return validateVoiceItem(result);
     },
   };
 }
