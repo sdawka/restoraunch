@@ -190,6 +190,19 @@ test.describe('Receipt Scanner Flow', () => {
     await expect(page.locator('button.confirm-btn')).toBeEnabled();
   });
 
+  test('can switch to voice mode', async ({ page }) => {
+    await page.goto('/inventory');
+
+    // Should see mode selection
+    await expect(page.locator('[data-testid="mode-voice"]')).toBeVisible();
+
+    // Click voice mode
+    await page.click('[data-testid="mode-voice"]');
+
+    // Should see voice dictation UI
+    await expect(page.locator('[data-testid="mic-button"]')).toBeVisible();
+  });
+
   test('shows error state for invalid image', async ({ page }) => {
     await page.goto('/inventory');
 
