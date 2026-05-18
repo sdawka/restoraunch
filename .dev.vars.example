@@ -5,3 +5,8 @@ PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxx
 CLERK_SECRET_KEY=sk_test_xxx
 CLERK_WEBHOOK_SECRET=whsec_xxx
 RESEND_API_KEY=re_xxx
+OPENROUTER_API_KEY=sk-or-xxx
+
+# E2E Testing - create a user with +clerk_test suffix in Clerk dashboard
+# The +clerk_test suffix suppresses verification emails
+E2E_CLERK_USER_EMAIL=e2e+clerk_test@yourdomain.com

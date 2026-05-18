@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
-    "@clerk/testing": "^2.0.25",
+    "@clerk/testing": "^2.0.29",
     "@playwright/test": "^1.59.1",
     "@testing-library/vue": "^8.1.0",
     "@types/canvas-confetti": "^1.9.0",

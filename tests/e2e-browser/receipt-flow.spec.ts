@@ -1,50 +1,18 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import { clerk, setupClerkTestingToken } from '@clerk/testing/playwright';
 import { resolve } from 'path';
-import { readFileSync } from 'fs';
-import { createQAAuthHeader } from '../../src/lib/auth/qa-bypass';
-import { QA_TEST_USERS } from '../qa/client';
 
 const RECEIPT_FIXTURE_PATH = resolve(process.cwd(), 'tests/fixtures/receipts/IMG_2156.jpeg');
 
-// Load QA bypass secret from .dev.vars
-function loadQASecret(): string {
-  const devVarsPath = resolve(process.cwd(), '.dev.vars');
-  try {
-    const content = readFileSync(devVarsPath, 'utf-8');
-    for (const line of content.split('\n')) {
-      const [key, ...valueParts] = line.split('=');
-      if (key?.trim() === 'QA_AUTH_BYPASS_SECRET') {
-        return valueParts.join('=').trim();
-      }
-    }
-  } catch {
-    // Fall through to error
-  }
-  throw new Error('QA_AUTH_BYPASS_SECRET not found in .dev.vars');
-}
-
-async function setupQAAuth(page: Page): Promise<void> {
-  const secret = loadQASecret();
-  const user = QA_TEST_USERS.admin;
-  const authHeader = await createQAAuthHeader(
-    {
-      userId: user.userId,
-      locationId: user.locationId,
-      role: user.role,
-    },
-    secret,
-    60
-  );
-
-  // Set extra HTTP headers for all requests in this context
-  await page.setExtraHTTPHeaders({
-    'X-QA-Auth': authHeader,
-  });
-}
+// Test user email - using +clerk_test suffix suppresses verification emails
+const TEST_USER_EMAIL = process.env.E2E_CLERK_USER_EMAIL || 'e2e+clerk_test@restoraunch.com';
 
 test.describe('Receipt Scanner Flow', () => {
   test.beforeEach(async ({ page }) => {
-    await setupQAAuth(page);
+    await setupClerkTestingToken({ page });
+    await page.goto('/');
+    // Server-side sign in - bypasses all verification using CLERK_SECRET_KEY
+    await clerk.signIn({ page, emailAddress: TEST_USER_EMAIL });
   });
 
   test('complete receipt scan and inventory update workflow', async ({ page }) => {
