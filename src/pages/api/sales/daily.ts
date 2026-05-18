@@ -21,12 +21,20 @@ export async function GET(context: APIContext): Promise<Response> {
     });
   }
 
-  const salesService = createSalesService(env.DB);
-  const menuService = createMenuService(env.DB);
+  try {
+    const salesService = createSalesService(env.DB);
+    const menuService = createMenuService(env.DB);
 
-  const daily = await salesService.getDailySummary(menuService, start, end, location.locationId);
+    const daily = await salesService.getDailySummary(menuService, start, end, location.locationId);
 
-  return new Response(JSON.stringify({ daily }), {
-    headers: { 'Content-Type': 'application/json' },
-  });
+    return new Response(JSON.stringify({ daily }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: `Failed to fetch daily summary: ${msg}` }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }

@@ -11,32 +11,40 @@ export async function GET(context: APIContext): Promise<Response> {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const db = env.DB;
-  const salesService = createSalesService(db);
-  const menuService = createMenuService(db);
+  try {
+    const db = env.DB;
+    const salesService = createSalesService(db);
+    const menuService = createMenuService(db);
 
-  const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
 
-  const sales = await salesService.getSalesWithProfit(menuService, today, today, location.locationId);
+    const sales = await salesService.getSalesWithProfit(menuService, today, today, location.locationId);
 
-  const totalRevenue = sales.reduce((sum, s) => sum + s.totalRevenue, 0);
-  const totalCost = sales.reduce((sum, s) => sum + s.totalCost, 0);
-  const totalProfit = sales.reduce((sum, s) => sum + s.totalProfit, 0);
-  const marginPercent = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+    const totalRevenue = sales.reduce((sum, s) => sum + s.totalRevenue, 0);
+    const totalCost = sales.reduce((sum, s) => sum + s.totalCost, 0);
+    const totalProfit = sales.reduce((sum, s) => sum + s.totalProfit, 0);
+    const marginPercent = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
-  const recentActivity = sales.slice(0, 5).map((s) => ({
-    name: s.menuItemName,
-    quantity: s.quantity,
-    revenue: s.totalRevenue,
-    time: 'Today',
-  }));
+    const recentActivity = sales.slice(0, 5).map((s) => ({
+      name: s.menuItemName,
+      quantity: s.quantity,
+      revenue: s.totalRevenue,
+      time: 'Today',
+    }));
 
-  return Response.json({
-    totalRevenue,
-    totalCost,
-    totalProfit,
-    marginPercent,
-    recentActivity,
-    date: today,
-  });
+    return Response.json({
+      totalRevenue,
+      totalCost,
+      totalProfit,
+      marginPercent,
+      recentActivity,
+      date: today,
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: `Failed to fetch today's sales: ${msg}` }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }

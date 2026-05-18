@@ -21,12 +21,20 @@ export async function GET(context: APIContext): Promise<Response> {
     });
   }
 
-  const salesService = createSalesService(env.DB);
-  const menuService = createMenuService(env.DB);
+  try {
+    const salesService = createSalesService(env.DB);
+    const menuService = createMenuService(env.DB);
 
-  const items = await salesService.getSalesWithProfit(menuService, start, end, location.locationId);
+    const items = await salesService.getSalesWithProfit(menuService, start, end, location.locationId);
 
-  return new Response(JSON.stringify({ items }), {
-    headers: { 'Content-Type': 'application/json' },
-  });
+    return new Response(JSON.stringify({ items }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: `Failed to fetch sales items: ${msg}` }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }

@@ -10,14 +10,25 @@ export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
   const db = env.DB;
-  const body = await request.json() as { type: ScenarioType; params: Record<string, unknown> };
+
+  let body: { type: ScenarioType; params: Record<string, unknown> };
+  try {
+    body = await request.json() as typeof body;
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   const scenarioService = createScenarioService();
   const menuService = createMenuService(db);
   const inventoryService = createInventoryService(db);
 
   let result: unknown;
 
-  switch (body.type) {
+  try {
+    switch (body.type) {
     case 'new_menu_item': {
       const p = body.params as {
         name: string;
@@ -118,9 +129,16 @@ export const POST: APIRoute = async ({ request }) => {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
-  }
+    }
 
-  return new Response(JSON.stringify(result), {
-    headers: { 'Content-Type': 'application/json' },
-  });
+    return new Response(JSON.stringify(result), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: `Scenario modeling failed: ${msg}` }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 };

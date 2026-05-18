@@ -61,6 +61,15 @@ export async function POST(context: APIContext): Promise<Response> {
       }))
     );
 
+    // Record POS import for image ownership tracking
+    await env.DB
+      .prepare(`
+        INSERT INTO pos_imports (image_url, sale_date, items_imported, location_id)
+        VALUES (?, ?, ?, ?)
+      `)
+      .bind(imageUrl, parsed.date, validSales.length, location.locationId)
+      .run();
+
     return new Response(
       JSON.stringify({
         imported: validSales.length,
@@ -79,17 +88,78 @@ export async function POST(context: APIContext): Promise<Response> {
 
     let imported = 0;
     const unmatched: string[] = [];
+    const validationErrors: { line: number; error: string }[] = [];
+    const EXPECTED_COLUMNS = 3; // menuItemName, quantity, date
 
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const lineNumber = i + 2; // +2 because we skip header (1) and arrays are 0-indexed
+
       if (!line.trim()) continue;
-      const [menuItemName, quantityStr, date] = line.split(',').map(s => s.trim());
+
+      const columns = line.split(',').map(s => s.trim());
+
+      // Validate column count
+      if (columns.length !== EXPECTED_COLUMNS) {
+        validationErrors.push({
+          line: lineNumber,
+          error: `Expected ${EXPECTED_COLUMNS} columns, got ${columns.length}`,
+        });
+        continue;
+      }
+
+      const [menuItemName, quantityStr, date] = columns;
+
+      // Validate required fields are not empty
+      if (!menuItemName) {
+        validationErrors.push({
+          line: lineNumber,
+          error: 'Menu item name is required',
+        });
+        continue;
+      }
+
+      if (!quantityStr) {
+        validationErrors.push({
+          line: lineNumber,
+          error: 'Quantity is required',
+        });
+        continue;
+      }
+
+      if (!date) {
+        validationErrors.push({
+          line: lineNumber,
+          error: 'Date is required',
+        });
+        continue;
+      }
+
+      // Validate quantity is a valid positive integer
+      const quantity = parseInt(quantityStr, 10);
+      if (Number.isNaN(quantity)) {
+        validationErrors.push({
+          line: lineNumber,
+          error: `Invalid quantity "${quantityStr}" - must be a number`,
+        });
+        continue;
+      }
+
+      if (quantity <= 0) {
+        validationErrors.push({
+          line: lineNumber,
+          error: `Invalid quantity ${quantity} - must be a positive number`,
+        });
+        continue;
+      }
+
       const menuItem = menuItems.find(
         m => m.name.toLowerCase() === menuItemName.toLowerCase()
       );
       if (menuItem) {
         await salesService.recordSale({
           menu_item_id: menuItem.id,
-          quantity: parseInt(quantityStr, 10),
+          quantity,
           sale_date: date,
           location_id: location.locationId,
         });
@@ -100,7 +170,7 @@ export async function POST(context: APIContext): Promise<Response> {
     }
 
     return new Response(
-      JSON.stringify({ imported, unmatched }),
+      JSON.stringify({ imported, unmatched, validationErrors }),
       { headers: { 'Content-Type': 'application/json' } }
     );
   }

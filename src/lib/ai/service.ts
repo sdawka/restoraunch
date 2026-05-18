@@ -1,4 +1,5 @@
 import { RECEIPT_PARSE_PROMPT, POS_PARSE_PROMPT, ITEM_MATCH_PROMPT, MULTI_PHOTO_RECEIPT_PROMPT } from "./prompts";
+import { roundMoney } from '../utils/money';
 
 // Interfaces
 export interface ParsedReceiptItem {
@@ -608,8 +609,8 @@ export function createAIService(config: AIServiceConfig): AIService {
         date,
         items: deduplicatedItems,
         extractedTotal,
-        calculatedTotal: Math.round(calculatedTotal * 100) / 100,
-        discrepancy: Math.round(discrepancy * 100) / 100,
+        calculatedTotal: roundMoney(calculatedTotal),
+        discrepancy: roundMoney(discrepancy),
         perImageResults,
         totalTokensUsed,
         totalCost: Math.round(totalCost * 1000000) / 1000000,

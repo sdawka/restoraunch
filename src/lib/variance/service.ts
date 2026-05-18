@@ -1,5 +1,6 @@
 import type { D1Database } from "@cloudflare/workers-types";
 import type { VarianceLog, InventoryItem } from "../db/queries";
+import { roundPercent } from '../utils/money';
 
 export interface VarianceResult {
   inventoryItemId: number;
@@ -160,7 +161,7 @@ export function createVarianceService(db: D1Database): VarianceService {
       }
 
       // Round to 2 decimal places
-      variancePct = Math.round(variancePct * 100) / 100;
+      variancePct = roundPercent(variancePct);
 
       // isAnomaly = variancePct > threshold
       const isAnomaly = variancePct > threshold;

@@ -61,6 +61,15 @@ export interface Supplier {
   created_at: string;
 }
 
+export interface PosImport {
+  id: number;
+  image_url: string;
+  sale_date: string;
+  items_imported: number;
+  location_id: number;
+  created_at: string;
+}
+
 // Helper functions
 export async function getInventoryItems(
   db: D1Database,

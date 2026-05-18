@@ -1,3 +1,5 @@
+import { roundMoney } from '../utils/money';
+
 export interface NewMenuItemInput {
   price: number;
   recipe: { inventoryItemId: number; quantityPerServing: number; costPerUnit: number }[];
@@ -120,7 +122,7 @@ export function createScenarioService(): ScenarioService {
       const affectedItems = input.affectedMenuItems.map(item => {
         const oldIngredientCost = item.quantityUsed * input.currentCostPerUnit;
         const newIngredientCost = item.quantityUsed * input.newCostPerUnit;
-        const dailyProfitChange = Math.round((oldIngredientCost - newIngredientCost) * item.dailySales * 1e10) / 1e10;
+        const dailyProfitChange = roundMoney((oldIngredientCost - newIngredientCost) * item.dailySales);
         dailySavings += dailyProfitChange;
         return {
           menuItemId: item.menuItemId,
@@ -130,11 +132,11 @@ export function createScenarioService(): ScenarioService {
         };
       });
 
-      const roundedDailySavings = Math.round(dailySavings * 1e10) / 1e10;
+      const roundedDailySavings = roundMoney(dailySavings);
       return {
         costDifference,
         dailySavings: roundedDailySavings,
-        monthlySavings: Math.round(roundedDailySavings * 30 * 1e10) / 1e10,
+        monthlySavings: roundMoney(roundedDailySavings * 30),
         affectedItems,
       };
     },

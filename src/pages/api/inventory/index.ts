@@ -10,11 +10,19 @@ export async function GET(context: APIContext): Promise<Response> {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const db = env.DB;
-  const service = createInventoryService(db);
-  const items = await service.getAll(location.locationId);
+  try {
+    const db = env.DB;
+    const service = createInventoryService(db);
+    const items = await service.getAll(location.locationId);
 
-  return new Response(JSON.stringify(items), {
-    headers: { 'Content-Type': 'application/json' },
-  });
+    return new Response(JSON.stringify(items), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: `Failed to fetch inventory: ${msg}` }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }

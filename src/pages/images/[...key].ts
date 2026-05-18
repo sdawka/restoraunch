@@ -18,10 +18,11 @@ async function getImageOwner(
   }
 
   if (key.startsWith('pos/')) {
-    // POS images don't have ownership tracking yet
-    // For now, allow access if user is authenticated with any location
-    // TODO: Add image_url column to daily_sales or similar
-    return null
+    const result = await db
+      .prepare('SELECT location_id FROM pos_imports WHERE image_url LIKE ?')
+      .bind(`%${key}%`)
+      .first<ImageOwner>()
+    return result
   }
 
   return null
@@ -49,8 +50,12 @@ export async function GET(context: APIContext): Promise<Response> {
     }
   }
 
-  // For POS images without ownership tracking, allow if authenticated
-  // This is a temporary measure until we add proper tracking
+  // For POS images, verify ownership
+  if (key.startsWith('pos/')) {
+    if (!owner || owner.location_id !== location.locationId) {
+      return new Response('Forbidden', { status: 403 })
+    }
+  }
 
   try {
     const object = await R2_IMAGES.get(key)

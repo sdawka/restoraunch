@@ -10,32 +10,49 @@ export async function POST(context: APIContext): Promise<Response> {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const db = env.DB;
-  const service = createMenuService(db);
-  const body = await context.request.json() as {
+  let body: {
     name: string;
     price: number;
     recipe: { inventoryItemId: number; quantityPerServing: number }[];
   };
+  try {
+    body = await context.request.json() as typeof body;
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
-  const created = await service.create({
-    name: body.name,
-    price: body.price,
-    location_id: location.locationId,
-  });
+  try {
+    const db = env.DB;
+    const service = createMenuService(db);
 
-  await service.setRecipe(
-    created.id,
-    body.recipe.map((r) => ({
-      inventory_item_id: r.inventoryItemId,
-      quantity_per_serving: r.quantityPerServing,
-    })),
-  );
+    const created = await service.create({
+      name: body.name,
+      price: body.price,
+      location_id: location.locationId,
+    });
 
-  const item = await service.getMenuItemWithCost(created.id);
+    await service.setRecipe(
+      created.id,
+      body.recipe.map((r) => ({
+        inventory_item_id: r.inventoryItemId,
+        quantity_per_serving: r.quantityPerServing,
+      })),
+    );
 
-  return new Response(JSON.stringify(item), {
-    status: 201,
-    headers: { 'Content-Type': 'application/json' },
-  });
-};
+    const item = await service.getMenuItemWithCost(created.id);
+
+    return new Response(JSON.stringify(item), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: `Failed to create menu item: ${msg}` }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}

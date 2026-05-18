@@ -117,6 +117,17 @@ CREATE TABLE IF NOT EXISTS inventory_adjustments (
     FOREIGN KEY (inventory_item_id) REFERENCES inventory_items(id)
 );
 
+-- POS imports table (tracks POS screen image uploads)
+CREATE TABLE IF NOT EXISTS pos_imports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    image_url TEXT NOT NULL,
+    sale_date TEXT NOT NULL,
+    items_imported INTEGER DEFAULT 0,
+    location_id INTEGER NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (location_id) REFERENCES locations(id)
+);
+
 -- Inventory snapshots table (point-in-time quantity records for variance calculation)
 CREATE TABLE IF NOT EXISTS inventory_snapshots (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -136,3 +147,5 @@ CREATE INDEX IF NOT EXISTS idx_sales_date ON sales(sale_date);
 CREATE INDEX IF NOT EXISTS idx_variance_logs_resolved ON variance_logs(resolved);
 CREATE INDEX IF NOT EXISTS idx_inventory_snapshots_item_date ON inventory_snapshots(inventory_item_id, snapshot_date);
 CREATE INDEX IF NOT EXISTS idx_inventory_snapshots_location ON inventory_snapshots(location_id);
+CREATE INDEX IF NOT EXISTS idx_pos_imports_location ON pos_imports(location_id);
+CREATE INDEX IF NOT EXISTS idx_pos_imports_image_url ON pos_imports(image_url);

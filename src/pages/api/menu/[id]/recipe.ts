@@ -6,12 +6,36 @@ export const prerender = false;
 
 export const GET: APIRoute = async ({ params }) => {
   const db = env.DB;
-  const service = createMenuService(db);
-  const id = parseInt(params.id!, 10);
+  const rawId = params.id;
 
-  const ingredients = await service.getRecipeIngredients(id);
+  if (!rawId) {
+    return new Response(JSON.stringify({ error: 'Missing id parameter' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
-  return new Response(JSON.stringify(ingredients), {
-    headers: { 'Content-Type': 'application/json' },
-  });
+  const id = parseInt(rawId, 10);
+
+  if (isNaN(id)) {
+    return new Response(JSON.stringify({ error: 'Invalid id' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  try {
+    const service = createMenuService(db);
+    const ingredients = await service.getRecipeIngredients(id);
+
+    return new Response(JSON.stringify(ingredients), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: msg }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 };
