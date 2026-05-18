@@ -2,8 +2,10 @@
 import { ref, computed, onMounted } from 'vue';
 import ReceiptItemRow from './ReceiptItemRow.vue';
 import OcrHints from './OcrHints.vue';
+import VoiceDictation from './VoiceDictation.vue';
 
 type ScannerState = 'ready' | 'scanning' | 'reviewing' | 'confirming' | 'confirmed' | 'error' | 'incomplete';
+type InputMode = 'select' | 'photo' | 'voice';
 
 interface Supplier {
   id: number;
@@ -45,6 +47,7 @@ const props = defineProps<{
   onInventoryUpdated?: () => void;
 }>();
 
+const inputMode = ref<InputMode>('select');
 const state = ref<ScannerState>('ready');
 const error = ref<string | null>(null);
 const scanResult = ref<ScanResult | null>(null);
@@ -377,6 +380,41 @@ function resetScanner() {
   stopCamera();
 }
 
+interface VoiceParsedItem {
+  name: string;
+  quantity: number;
+  unit: string;
+  price: number;
+  matchedInventoryItemId: number | null;
+  matchConfidence: number;
+  matchReason: string;
+}
+
+function handleVoiceDone(voiceItems: VoiceParsedItem[]) {
+  const items_ref = voiceItems.map(item => ({
+    name: item.name,
+    quantity: item.quantity,
+    unit: item.unit,
+    unitCost: item.price / item.quantity,
+    matchedInventoryItemId: item.matchedInventoryItemId,
+    matchConfidence: item.matchConfidence,
+    matchReason: item.matchReason,
+    isNewItem: item.matchedInventoryItemId === null,
+  }));
+  scanResult.value = {
+    photoUrl: '',
+    photoUrls: [],
+    supplier: '',
+    items: items_ref,
+    total: voiceItems.reduce((sum, i) => sum + i.price, 0),
+    date: new Date().toISOString().split('T')[0],
+    isPartial: false,
+  };
+  selectedItems.value = new Set(items_ref.map((_, i) => i));
+  state.value = 'reviewing';
+  inputMode.value = 'photo';
+}
+
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -412,26 +450,64 @@ function formatCurrency(value: number): string {
       </button>
     </div>
 
-    <!-- State Indicator -->
-    <div class="state-indicator">
-      <div :class="['state-step', { active: state === 'ready', complete: ['scanning', 'reviewing', 'confirming', 'confirmed'].includes(state) }]">
-        <span class="step-dot"></span>
-        <span class="step-label">Upload</span>
-      </div>
-      <div class="state-line" :class="{ active: ['reviewing', 'confirming', 'confirmed'].includes(state) }"></div>
-      <div :class="['state-step', { active: state === 'reviewing', complete: ['confirming', 'confirmed'].includes(state) }]">
-        <span class="step-dot"></span>
-        <span class="step-label">Review</span>
-      </div>
-      <div class="state-line" :class="{ active: state === 'confirmed' }"></div>
-      <div :class="['state-step', { active: state === 'confirmed' }]">
-        <span class="step-dot"></span>
-        <span class="step-label">Done</span>
+    <!-- Mode Selection -->
+    <div v-if="inputMode === 'select'" class="mode-selection">
+      <p class="mode-prompt">How do you want to add items?</p>
+
+      <div class="mode-cards">
+        <button
+          data-testid="mode-photo"
+          class="mode-card"
+          type="button"
+          @click="inputMode = 'photo'"
+        >
+          <span class="mode-icon">📷</span>
+          <span class="mode-title">Scan Receipt</span>
+          <span class="mode-desc">Take or upload photos</span>
+        </button>
+
+        <button
+          data-testid="mode-voice"
+          class="mode-card"
+          type="button"
+          @click="inputMode = 'voice'"
+        >
+          <span class="mode-icon">🎤</span>
+          <span class="mode-title">Speak Items</span>
+          <span class="mode-desc">Dictate one by one</span>
+        </button>
       </div>
     </div>
 
-    <!-- Ready State -->
-    <div v-if="state === 'ready'" class="ready-state">
+    <!-- Voice Mode -->
+    <VoiceDictation
+      v-else-if="inputMode === 'voice'"
+      @done="handleVoiceDone"
+      @cancel="inputMode = 'select'"
+    />
+
+    <!-- Photo Mode -->
+    <template v-else-if="inputMode === 'photo'">
+      <!-- State Indicator -->
+      <div class="state-indicator">
+        <div :class="['state-step', { active: state === 'ready', complete: ['scanning', 'reviewing', 'confirming', 'confirmed'].includes(state) }]">
+          <span class="step-dot"></span>
+          <span class="step-label">Upload</span>
+        </div>
+        <div class="state-line" :class="{ active: ['reviewing', 'confirming', 'confirmed'].includes(state) }"></div>
+        <div :class="['state-step', { active: state === 'reviewing', complete: ['confirming', 'confirmed'].includes(state) }]">
+          <span class="step-dot"></span>
+          <span class="step-label">Review</span>
+        </div>
+        <div class="state-line" :class="{ active: state === 'confirmed' }"></div>
+        <div :class="['state-step', { active: state === 'confirmed' }]">
+          <span class="step-dot"></span>
+          <span class="step-label">Done</span>
+        </div>
+      </div>
+
+      <!-- Ready State -->
+      <div v-if="state === 'ready'" data-testid="upload-area" class="ready-state">
       <!-- Show captured images if any -->
       <div v-if="capturedImages.length > 0" class="captured-images">
         <div class="captured-header">
@@ -648,17 +724,18 @@ function formatCurrency(value: number): string {
       </div>
     </div>
 
-    <!-- Confirmed State -->
-    <div v-if="state === 'confirmed'" class="confirmed-state">
-      <div class="success-animation">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="success-icon">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-          <polyline points="22 4 12 14.01 9 11.01"/>
-        </svg>
+      <!-- Confirmed State -->
+      <div v-if="state === 'confirmed'" class="confirmed-state">
+        <div class="success-animation">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="success-icon">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <p class="success-text">Inventory Updated!</p>
+        <p class="success-subtext">{{ selectedCount }} items added to stock</p>
       </div>
-      <p class="success-text">Inventory Updated!</p>
-      <p class="success-subtext">{{ selectedCount }} items added to stock</p>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -807,6 +884,62 @@ function formatCurrency(value: number): string {
 
 .state-line.active {
   background: oklch(0.6 0.15 140);
+}
+
+/* Mode Selection */
+.mode-selection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 40px 20px;
+}
+
+.mode-prompt {
+  font-size: 11px;
+  color: var(--warm-500, #888);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mode-cards {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.mode-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 16px;
+  border: 2px solid var(--warm-200, #e8e4e0);
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-card:hover {
+  border-color: var(--warm-600, #8b7355);
+  background: var(--warm-50, #faf8f6);
+}
+
+.mode-icon {
+  font-size: 28px;
+}
+
+.mode-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.mode-desc {
+  font-size: 11px;
+  color: var(--warm-500, #888);
 }
 
 /* Captured Images */

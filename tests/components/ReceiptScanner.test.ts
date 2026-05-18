@@ -23,6 +23,14 @@ vi.mock('../../src/components/OcrHints.vue', () => ({
   },
 }));
 
+vi.mock('../../src/components/VoiceDictation.vue', () => ({
+  default: {
+    name: 'VoiceDictation',
+    emits: ['done', 'cancel'],
+    template: '<div class="mock-voice-dictation" @click="$emit(\'done\', [])">Voice Mode</div>',
+  },
+}));
+
 // Mock URL.createObjectURL and revokeObjectURL
 const mockCreateObjectURL = vi.fn(() => 'blob:mock-url');
 const mockRevokeObjectURL = vi.fn();
@@ -117,6 +125,8 @@ describe('ReceiptScanner', () => {
       await flushPromises();
 
       expect(wrapper.find('.receipt-scanner').exists()).toBe(true);
+      // Initial state shows mode selection; click photo to reach ready state
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
       expect(wrapper.find('.ready-state').exists()).toBe(true);
       expect(wrapper.find('.upload-zone').exists()).toBe(true);
     });
@@ -132,6 +142,7 @@ describe('ReceiptScanner', () => {
     it('shows state indicator with Upload active', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       const steps = wrapper.findAll('.state-step');
       expect(steps).toHaveLength(3);
@@ -148,6 +159,7 @@ describe('ReceiptScanner', () => {
     it('shows upload zone with correct text', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       expect(wrapper.find('.upload-text').text()).toBe('Drop receipt image here');
       expect(wrapper.find('.upload-subtext').text()).toBe('or click to browse');
@@ -158,6 +170,7 @@ describe('ReceiptScanner', () => {
     it('transitions to scanning state when file is uploaded', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       // Mock scan response that never resolves to keep in scanning state
       mockFetch.mockImplementation((url: string) => {
@@ -187,6 +200,7 @@ describe('ReceiptScanner', () => {
     it('shows scanning animation', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -211,6 +225,7 @@ describe('ReceiptScanner', () => {
     it('calls /api/receipts/scan with FormData', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string, options?: RequestInit) => {
         if (url === '/api/receipts/scan') {
@@ -241,6 +256,7 @@ describe('ReceiptScanner', () => {
     it('shows drag-over styling when dragging over upload zone', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       const uploadZone = wrapper.find('.upload-zone');
       await uploadZone.trigger('dragover');
@@ -251,6 +267,7 @@ describe('ReceiptScanner', () => {
     it('removes drag-over styling on drag leave', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       const uploadZone = wrapper.find('.upload-zone');
       await uploadZone.trigger('dragover');
@@ -270,6 +287,7 @@ describe('ReceiptScanner', () => {
     it('handles file drop and triggers scan', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -298,6 +316,7 @@ describe('ReceiptScanner', () => {
     it('filters non-image files on drop', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       const uploadZone = wrapper.find('.upload-zone');
       const textFile = new File(['text'], 'document.txt', { type: 'text/plain' });
@@ -316,6 +335,7 @@ describe('ReceiptScanner', () => {
     it('handles multiple image files on drop', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       let formDataImages: File[] = [];
       mockFetch.mockImplementation((url: string, options?: RequestInit) => {
@@ -350,6 +370,7 @@ describe('ReceiptScanner', () => {
     it('shows captured images count after upload', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -381,6 +402,7 @@ describe('ReceiptScanner', () => {
     it('displays thumbnail strip with captured images', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -412,6 +434,7 @@ describe('ReceiptScanner', () => {
     it('allows removing captured images', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -451,6 +474,7 @@ describe('ReceiptScanner', () => {
     it('transitions from scanning to reviewing on successful scan', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -477,6 +501,7 @@ describe('ReceiptScanner', () => {
     it('transitions to confirming state when confirm is clicked', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -511,6 +536,7 @@ describe('ReceiptScanner', () => {
     it('transitions to confirmed state on successful confirmation', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -548,6 +574,7 @@ describe('ReceiptScanner', () => {
     it('resets to ready state after confirmed delay', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -591,6 +618,7 @@ describe('ReceiptScanner', () => {
     async function mountWithItems(): Promise<VueWrapper> {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -676,6 +704,7 @@ describe('ReceiptScanner', () => {
     it('shows incomplete state when isPartial is true', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -703,6 +732,7 @@ describe('ReceiptScanner', () => {
     it('shows stats in incomplete state', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -731,6 +761,7 @@ describe('ReceiptScanner', () => {
     it('addMorePhotos returns to ready state', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -763,6 +794,7 @@ describe('ReceiptScanner', () => {
     it('continueWithPartial proceeds to reviewing state', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -795,6 +827,7 @@ describe('ReceiptScanner', () => {
     it('shows error state when scan fails', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -822,6 +855,7 @@ describe('ReceiptScanner', () => {
     it('shows error state on network error', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -846,6 +880,7 @@ describe('ReceiptScanner', () => {
     it('retry button resets scanner', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -880,6 +915,7 @@ describe('ReceiptScanner', () => {
     it('disables confirm button when no items selected', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -912,6 +948,7 @@ describe('ReceiptScanner', () => {
     it('enables confirm button when items are selected', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -940,6 +977,7 @@ describe('ReceiptScanner', () => {
     it('shows error when trying to confirm with only new items selected', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -991,6 +1029,7 @@ describe('ReceiptScanner', () => {
     it('shows reset button in non-ready states', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -1017,6 +1056,7 @@ describe('ReceiptScanner', () => {
     it('reset button returns to ready state and clears data', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -1051,6 +1091,7 @@ describe('ReceiptScanner', () => {
     it('clears all captured image URLs on reset', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -1089,6 +1130,7 @@ describe('ReceiptScanner', () => {
         },
       });
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -1167,6 +1209,7 @@ describe('ReceiptScanner', () => {
 
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       const fileInput = wrapper.find('input[type="file"]');
       Object.defineProperty(fileInput.element, 'files', {
@@ -1203,6 +1246,7 @@ describe('ReceiptScanner', () => {
 
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       const fileInput = wrapper.find('input[type="file"]');
       Object.defineProperty(fileInput.element, 'files', {
@@ -1222,6 +1266,7 @@ describe('ReceiptScanner', () => {
     it('shows merge info when multiple photos processed', async () => {
       const wrapper = mount(ReceiptScanner);
       await flushPromises();
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
 
       mockFetch.mockImplementation((url: string) => {
         if (url === '/api/receipts/scan') {
@@ -1254,6 +1299,32 @@ describe('ReceiptScanner', () => {
       expect(wrapper.find('.merge-badge').text()).toContain('3 photos merged');
       expect(wrapper.find('.dedup-badge').exists()).toBe(true);
       expect(wrapper.find('.dedup-badge').text()).toContain('5 duplicates removed');
+    });
+  });
+
+  describe('Mode Selection', () => {
+    it('shows mode selection cards in initial state', () => {
+      const wrapper = mount(ReceiptScanner);
+
+      expect(wrapper.find('[data-testid="mode-photo"]').exists()).toBe(true);
+      expect(wrapper.find('[data-testid="mode-voice"]').exists()).toBe(true);
+    });
+
+    it('switches to photo mode when photo card clicked', async () => {
+      const wrapper = mount(ReceiptScanner);
+
+      await wrapper.find('[data-testid="mode-photo"]').trigger('click');
+
+      expect(wrapper.find('[data-testid="upload-area"]').exists()).toBe(true);
+      expect(wrapper.find('[data-testid="mode-photo"]').exists()).toBe(false);
+    });
+
+    it('switches to voice mode when voice card clicked', async () => {
+      const wrapper = mount(ReceiptScanner);
+
+      await wrapper.find('[data-testid="mode-voice"]').trigger('click');
+
+      expect(wrapper.find('.mock-voice-dictation').exists()).toBe(true);
     });
   });
 });
